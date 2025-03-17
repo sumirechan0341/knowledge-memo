@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 180 20% 99%;
+    --foreground: 222 47% 11%;
+
+    --card: 172 45% 98%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 187 65% 32%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 188 30% 95%;
+    --secondary-foreground: 187 65% 32%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 187 65% 96%;
+    --accent-foreground: 187 65% 32%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 187 10% 90%;
+    --input: 187 10% 90%;
+    --ring: 187 65% 32%;
+
+    --chart-1: 187 65% 40%;
+    --chart-2: 210 80% 56%;
+    --chart-3: 270 70% 60%;
+    --chart-4: 145 50% 45%;
+    --chart-5: 35 80% 65%;
+
+    --radius: 0.75rem;
+
+    --sidebar: 187 30% 97%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 187 65% 32%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 188 30% 92%;
+    --sidebar-accent-foreground: 187 65% 32%;
+    --sidebar-border: 187 10% 85%;
+    --sidebar-ring: 187 65% 32%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --primary: 187 70% 42%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 187 70% 42%;
+
+    --chart-1: 187 70% 50%;
+    --chart-2: 210 90% 60%;
+    --chart-3: 270 80% 70%;
+    --chart-4: 145 60% 50%;
+    --chart-5: 35 90% 65%;
+
+    --sidebar: 222 47% 7%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 187 70% 42%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 216 34% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 216 34% 17%;
+    --sidebar-ring: 187 70% 42%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    outline-color: hsl(var(--ring) / 0.5);
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer components {
+  /* 紙のようなテクスチャ */
+  .paper-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-position: 0 0;
+    background-size: 300px 300px;
+  }
+
+  /* メモ用紙風スタイル */
+  .note-paper {
+    @apply relative overflow-hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .note-paper::before {
+    content: '';
+    @apply absolute opacity-10;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(0, 0, 0, 0.05) 28px,
+      rgba(0, 0, 0, 0.05) 29px
+    );
+    pointer-events: none;
+  }
+
+  /* 美しいスクロールバー */
+  .scrollbar-fancy {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary)) transparent;
+  }
+
+  .scrollbar-fancy::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-fancy::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-fancy::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary) / 0.3);
+    @apply rounded-full transition-colors;
+  }
+
+  .scrollbar-fancy::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary) / 0.6);
+  }
+
+  /* その他のユーティリティクラス */
+  .glass-effect {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .ink-annotation {
+    @apply italic;
+  }
+
+  .highlight {
+    background-color: hsl(var(--primary) / 0.1);
+  }
+
+  .paper-shadow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05),
+      0 10px 15px -5px rgba(0, 0, 0, 0.05);
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-200;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}

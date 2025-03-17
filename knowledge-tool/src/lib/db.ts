@@ -1,57 +1,63 @@
-import { openDB, IDBPDatabase, DBSchema } from 'idb'
+// lib/db.ts
+import { openDB, DBSchema } from 'idb'
 
-export interface Journal {
-  id?: number
-  date: string
+// ナレッジのデータ型定義
+export interface Knowledge {
+  id?: number // オートインクリメントされるキー
+  title: string
   content: string
+  createdAt: string // ISO形式の日時
+  tags?: string[]
 }
 
+// IndexedDBのスキーマ定義
 interface KnowledgeDB extends DBSchema {
-  journals: {
+  knowledge: {
     key: number
-    value: Journal
-    indexes: {
-      // "by-date" インデックスは、Journal の date プロパティに基づいて検索できるようにするためのものです。
-      'by-date': string
-    }
+    value: Knowledge
+    indexes: { 'by-createdAt': string }
   }
 }
 
-const DB_NAME = 'knowledgeDB'
+const DB_NAME = 'knowledge-db'
 const DB_VERSION = 1
-const STORE_NAME = 'journals'
+const STORE_NAME = 'knowledge'
 
-async function initDB(): Promise<IDBPDatabase<KnowledgeDB>> {
+// IndexedDBを開く関数（DBが存在しなければ作成・アップグレード処理を行う）
+async function getDB() {
   return openDB<KnowledgeDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, {
-          keyPath: 'id',
-          autoIncrement: true
-        })
-        // 例として日付での検索が必要なら、インデックスを作成します。
-        store.createIndex('by-date', 'date')
-      }
+      const store = db.createObjectStore(STORE_NAME, {
+        keyPath: 'id',
+        autoIncrement: true
+      })
+      store.createIndex('by-createdAt', 'createdAt')
     }
   })
 }
 
-export async function addJournal(journal: Journal): Promise<number> {
-  const db = await initDB()
-  return db.add(STORE_NAME, journal)
-}
-
-export async function getJournals(): Promise<Journal[]> {
-  const db = await initDB()
+// ナレッジデータをすべて取得する関数
+export async function getKnowledgeItems(): Promise<Knowledge[]> {
+  const db = await getDB()
   return db.getAll(STORE_NAME)
 }
 
-export async function updateJournal(journal: Journal): Promise<void> {
-  const db = await initDB()
-  await db.put(STORE_NAME, journal)
+// 新しいナレッジデータを追加する関数
+export async function addKnowledge(
+  item: Omit<Knowledge, 'id'>
+): Promise<number> {
+  const db = await getDB()
+  return db.add(STORE_NAME, item)
 }
 
-export async function deleteJournal(id: number): Promise<void> {
-  const db = await initDB()
+// 既存のナレッジデータを更新する関数
+export async function updateKnowledge(item: Knowledge): Promise<void> {
+  const db = await getDB()
+  await db.put(STORE_NAME, item)
+}
+
+// ナレッジデータを削除する関数
+export async function deleteKnowledge(id: number): Promise<void> {
+  const db = await getDB()
   await db.delete(STORE_NAME, id)
 }

@@ -1,9 +1,8 @@
 {
   "name": "Knowledge Tool",
-  "short_name": "Knowledge",
+  "short_name": "KT",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "description": "A tool for accumulating knowledge."
+  "theme_color": "#000000"
 }
