@@ -1,45 +1,33 @@
-import '@/styles/globals.css'
-import '@/styles/theme.css'
+import type { Metadata } from 'next'
 import { Inter as FontSans } from 'next/font/google'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import '../styles/globals.css'
 import { cn } from '@/lib/utils'
-import { ThemeProvider } from '@/components/providers/theme-provider'
+import { Providers } from './providers' // ← クライアントプロバイダーを使用
 
 const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans'
 })
 
-export const metadata = {
-  title: 'ナレッジジャーナル',
-  description: 'アイデアを整理して、知識を深める'
+export const metadata: Metadata = {
+  title: 'Knowledge Base - 高機能なナレッジ管理ツール',
+  description: '個人やチームのためのナレッジ管理・整理アプリケーション'
 }
 
 export default function RootLayout({
   children
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="ja" suppressHydrationWarning>
-      <head />
+    <html lang="ja">
       <body
         className={cn(
           'min-h-screen bg-background font-sans antialiased',
-          fontSans.variable,
-          GeistSans.variable,
-          GeistMono.variable
+          fontSans.variable
         )}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
