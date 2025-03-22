@@ -1,5 +1,4 @@
 import { Knowledge } from '@/lib/db'
-import { BookText, Bookmark, Code, FileText, PenTool, Tag } from 'lucide-react'
 
 // サンプルデータ（IndexedDBにデータがない場合の初期データ）
 export const sampleKnowledgeItems: Omit<Knowledge, 'id'>[] = [
@@ -66,17 +65,17 @@ export const collections = [
   {
     label: '開発メモ',
     description: 'プログラミングと開発に関するメモ',
-    icon: <Code className="h-4 w-4" />
+    iconName: 'code'
   },
   {
     label: '学習ノート',
     description: '学習内容のノート',
-    icon: <BookText className="h-4 w-4" />
+    iconName: 'book-text'
   },
   {
     label: 'アイデア集',
     description: 'プロジェクトのアイデア',
-    icon: <PenTool className="h-4 w-4" />
+    iconName: 'pen-tool'
   }
 ]
 

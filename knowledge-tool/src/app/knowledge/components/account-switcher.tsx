@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Code, BookText, PenTool, LucideIcon } from 'lucide-react'
+import { Code, BookText, PenTool } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Select,

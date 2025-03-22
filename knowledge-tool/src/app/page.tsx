@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useCookies } from 'next-client-cookies' // ← 正しいインポートパス
 import { Knowledge, getKnowledgeItems, addKnowledge } from '@/lib/db'
-import { Knowledge as KnowledgeComponent } from '@/components/knowledge'
-import { collections, sampleKnowledgeItems } from '@/lib/data'
+import { sampleKnowledgeItems } from '@/lib/data'
+import { accounts } from './knowledge/data'
 import { Button } from '@/components/ui/button'
+import { KnowledgeComponent } from './knowledge/components/knowledge'
 
 export default function KnowledgePage() {
   const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>([])
@@ -81,12 +82,11 @@ export default function KnowledgePage() {
   return (
     <div className="hidden flex-col md:flex h-screen">
       <KnowledgeComponent
-        collections={collections}
-        knowledgeItems={knowledgeItems}
+        accounts={accounts}
+        knowledges={knowledgeItems}
         defaultLayout={defaultLayout}
         defaultCollapsed={defaultCollapsed}
         navCollapsedSize={4}
-        onRefresh={handleRefresh}
       />
     </div>
   )

@@ -2,17 +2,11 @@
 
 import * as React from 'react'
 import {
-  AlertCircle,
   Archive,
-  ArchiveX,
-  File,
   Inbox,
-  MessagesSquare,
   Search,
   Send,
-  ShoppingCart,
   Trash2,
-  Users2,
   Code,
   FileText,
   Tag
@@ -32,14 +26,13 @@ import { AccountSwitcher } from './account-switcher'
 import { KnowledgeDisplay } from './knowledge-display'
 import { KnowledgeList } from './knowledge-list'
 import { Nav } from './nav'
-import { type Knowledge, knowledges } from '../data'
 import { useKnowledge } from '../use-knowledge'
-
+import { Knowledge } from '@/lib/db'
 interface KnowledgeProps {
   accounts: {
     label: string
     email: string
-    icon: React.ReactNode
+    iconName: string
   }[]
   knowledges: Knowledge[]
   defaultLayout: number[] | undefined
@@ -47,7 +40,7 @@ interface KnowledgeProps {
   navCollapsedSize: number
 }
 
-export function Knowledge({
+export function KnowledgeComponent({
   accounts,
   knowledges,
   defaultLayout = [20, 32, 48],
@@ -209,9 +202,6 @@ export function Knowledge({
             </div>
             <TabsContent value="all" className="m-0">
               <KnowledgeList items={knowledges} />
-            </TabsContent>
-            <TabsContent value="unread" className="m-0">
-              <KnowledgeList items={knowledges.filter((item) => !item.read)} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>

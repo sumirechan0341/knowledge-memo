@@ -3,11 +3,13 @@ import { openDB, DBSchema } from 'idb'
 
 // ナレッジのデータ型定義
 export interface Knowledge {
-  id?: number // オートインクリメントされるキー
-  title: string
-  content: string
-  createdAt: string // ISO形式の日時
-  tags?: string[]
+  id?: number
+  name: string
+  subject: string
+  text: string
+  date: string
+  labels: string[]
+  read?: boolean
 }
 
 // IndexedDBのスキーマ定義
@@ -60,4 +62,29 @@ export async function updateKnowledge(item: Knowledge): Promise<void> {
 export async function deleteKnowledge(id: number): Promise<void> {
   const db = await getDB()
   await db.delete(STORE_NAME, id)
+}
+
+// モックデータをIndexedDBに初期化する関数
+export async function initializeDBWithMockData(
+  mockData: Knowledge[]
+): Promise<void> {
+  const db = await getDB()
+
+  // 現在のデータ数を確認
+  const count = await db.count(STORE_NAME)
+
+  // データが存在しない場合のみ初期化
+  if (count === 0) {
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+
+    // 各モックデータを追加
+    for (const item of mockData) {
+      await tx.store.add(item)
+    }
+
+    await tx.done
+    console.log('IndexedDB initialized with mock data')
+  } else {
+    console.log('IndexedDB already contains data, skipping initialization')
+  }
 }

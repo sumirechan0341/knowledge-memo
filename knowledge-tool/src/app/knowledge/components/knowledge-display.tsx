@@ -35,7 +35,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { Knowledge } from '../data'
+import { Knowledge } from '@/lib/db'
 
 interface KnowledgeDisplayProps {
   knowledge: Knowledge | null

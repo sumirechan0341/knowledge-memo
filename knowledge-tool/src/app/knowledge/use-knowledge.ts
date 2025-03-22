@@ -1,12 +1,12 @@
 import { atom, useAtom } from 'jotai'
-import { Knowledge, knowledges } from './data'
+import { Knowledge } from '@/lib/db'
 
 type Config = {
   selected: Knowledge['id'] | null
 }
 
 const configAtom = atom<Config>({
-  selected: knowledges.length > 0 ? knowledges[0].id : null
+  selected: null
 })
 
 export function useKnowledge() {
