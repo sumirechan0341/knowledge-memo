@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useCookies } from 'next-client-cookies' // ← 正しいインポートパス
-import { Knowledge, getKnowledgeItems, addKnowledge } from '@/lib/db'
-import { sampleKnowledgeItems } from '@/lib/data'
+import { Knowledge, getKnowledgeItems } from '@/lib/db'
 import { accounts } from './knowledge/data'
 import { Button } from '@/components/ui/button'
 import { KnowledgeComponent } from './knowledge/components/knowledge'
@@ -26,16 +25,7 @@ export default function KnowledgePage() {
     const fetchData = async () => {
       setLoading(true)
       try {
-        let items = await getKnowledgeItems()
-
-        // データがなければサンプルデータを追加
-        if (items.length === 0) {
-          await Promise.all(
-            sampleKnowledgeItems.map((item) => addKnowledge(item))
-          )
-          items = await getKnowledgeItems()
-        }
-
+        const items = await getKnowledgeItems()
         setKnowledgeItems(items)
       } catch (err) {
         console.error('Failed to fetch knowledge items:', err)

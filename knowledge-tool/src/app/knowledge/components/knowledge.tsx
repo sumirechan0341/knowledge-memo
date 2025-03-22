@@ -9,11 +9,13 @@ import {
   Trash2,
   Code,
   FileText,
-  Tag
+  Tag,
+  Plus
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -38,6 +40,7 @@ interface KnowledgeProps {
   defaultLayout: number[] | undefined
   defaultCollapsed?: boolean
   navCollapsedSize: number
+  onKnowledgeAdded?: () => void
 }
 
 export function KnowledgeComponent({
@@ -45,10 +48,11 @@ export function KnowledgeComponent({
   knowledges,
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
-  navCollapsedSize
+  navCollapsedSize,
+  onKnowledgeAdded
 }: KnowledgeProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
-  const [mail] = useKnowledge()
+  const [mail, setMail] = useKnowledge()
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -176,20 +180,44 @@ export function KnowledgeComponent({
           <Tabs defaultValue="all">
             <div className="flex items-center px-4 py-2">
               <h1 className="text-xl font-bold">ナレッジベース</h1>
-              <TabsList className="ml-auto">
-                <TabsTrigger
-                  value="all"
-                  className="text-zinc-600 dark:text-zinc-200"
+              <div className="flex items-center ml-auto gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMail({
+                      ...mail,
+                      selected: null,
+                      isCreating: true,
+                      tempKnowledge: {
+                        name: '',
+                        subject: '',
+                        text: '',
+                        date: new Date().toISOString(),
+                        labels: [],
+                        read: false
+                      }
+                    })
+                  }}
                 >
-                  すべて
-                </TabsTrigger>
-                <TabsTrigger
-                  value="unread"
-                  className="text-zinc-600 dark:text-zinc-200"
-                >
-                  未読
-                </TabsTrigger>
-              </TabsList>
+                  <Plus className="mr-2 h-4 w-4" />
+                  新規作成
+                </Button>
+                <TabsList>
+                  <TabsTrigger
+                    value="all"
+                    className="text-zinc-600 dark:text-zinc-200"
+                  >
+                    すべて
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="unread"
+                    className="text-zinc-600 dark:text-zinc-200"
+                  >
+                    未読
+                  </TabsTrigger>
+                </TabsList>
+              </div>
             </div>
             <Separator />
             <div className="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -209,8 +237,11 @@ export function KnowledgeComponent({
         <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
           <KnowledgeDisplay
             knowledge={
-              knowledges.find((item) => item.id === mail.selected) || null
+              mail.isCreating
+                ? null
+                : knowledges.find((item) => item.id === mail.selected) || null
             }
+            onKnowledgeSaved={onKnowledgeAdded}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

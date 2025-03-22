@@ -3,10 +3,14 @@ import { Knowledge } from '@/lib/db'
 
 type Config = {
   selected: Knowledge['id'] | null
+  isCreating: boolean
+  tempKnowledge: Omit<Knowledge, 'id'> | null
 }
 
 const configAtom = atom<Config>({
-  selected: null
+  selected: null,
+  isCreating: false,
+  tempKnowledge: null
 })
 
 export function useKnowledge() {

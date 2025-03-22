@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { KnowledgeComponent } from '@/app/knowledge/components/knowledge'
 import { accounts, knowledges as mockKnowledges } from '@/app/knowledge/data'
@@ -19,6 +19,16 @@ export default function KnowledgePage() {
   const [defaultCollapsed, setDefaultCollapsed] = useState<boolean | undefined>(
     undefined
   )
+
+  // ナレッジデータを再読み込みする関数
+  const refreshKnowledge = useCallback(async () => {
+    try {
+      const items = await getKnowledgeItems()
+      setKnowledges(items)
+    } catch (error) {
+      console.error('Failed to refresh knowledge data:', error)
+    }
+  }, [])
 
   useEffect(() => {
     // クッキーからレイアウト設定を読み込む
@@ -47,8 +57,7 @@ export default function KnowledgePage() {
         await initializeDBWithMockData(mockKnowledges)
 
         // IndexedDBからデータを取得
-        const items = await getKnowledgeItems()
-        setKnowledges(items)
+        await refreshKnowledge()
       } catch (error) {
         console.error('Failed to load data from IndexedDB:', error)
       } finally {
@@ -57,7 +66,7 @@ export default function KnowledgePage() {
     }
 
     loadData()
-  }, [])
+  }, [refreshKnowledge])
 
   if (loading) {
     return (
@@ -92,6 +101,7 @@ export default function KnowledgePage() {
           defaultLayout={defaultLayout}
           defaultCollapsed={defaultCollapsed}
           navCollapsedSize={4}
+          onKnowledgeAdded={refreshKnowledge}
         />
       </div>
     </>

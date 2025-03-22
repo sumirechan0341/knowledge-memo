@@ -38,10 +38,17 @@ async function getDB() {
   })
 }
 
-// ナレッジデータをすべて取得する関数
+// ナレッジデータをすべて取得する関数（更新日時の新しい順）
 export async function getKnowledgeItems(): Promise<Knowledge[]> {
   const db = await getDB()
-  return db.getAll(STORE_NAME)
+  const items = await db.getAll(STORE_NAME)
+
+  // 日付の新しい順（降順）にソート
+  return items.sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    return dateB - dateA
+  })
 }
 
 // 新しいナレッジデータを追加する関数

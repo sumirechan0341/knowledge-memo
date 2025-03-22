@@ -1,32 +1,9 @@
-import { addDays, addHours, format, nextSaturday } from 'date-fns'
-import {
-  Archive,
-  ArchiveX,
-  Clock,
-  Forward,
-  MoreVertical,
-  Reply,
-  ReplyAll,
-  Trash2
-} from 'lucide-react'
+import { format } from 'date-fns'
+import { Trash2, Save, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
-import {
-  DropdownMenuContent,
-  DropdownMenuItem
-} from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
@@ -35,14 +12,136 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { Knowledge } from '@/lib/db'
+import { Knowledge, addKnowledge, updateKnowledge } from '@/lib/db'
+import { useKnowledge } from '../use-knowledge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface KnowledgeDisplayProps {
   knowledge: Knowledge | null
+  onKnowledgeSaved?: () => void
 }
 
-export function KnowledgeDisplay({ knowledge }: KnowledgeDisplayProps) {
-  const today = new Date()
+export function KnowledgeDisplay({
+  knowledge,
+  onKnowledgeSaved
+}: KnowledgeDisplayProps) {
+  const [mail, setMail] = useKnowledge()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<Omit<Knowledge, 'id'>>({
+    name: '',
+    subject: '',
+    text: '',
+    date: new Date().toISOString(),
+    labels: [],
+    read: false
+  })
+  const [labelsInput, setLabelsInput] = useState('')
+  const [hasChanges, setHasChanges] = useState(false)
+
+  // 既存のナレッジが選択された場合、またはtempKnowledgeが設定された場合、フォームデータを更新
+  useEffect(() => {
+    if (mail.isCreating && mail.tempKnowledge) {
+      setFormData(mail.tempKnowledge)
+      setLabelsInput(mail.tempKnowledge.labels.join(', '))
+      setHasChanges(false)
+    } else if (knowledge) {
+      setFormData({
+        name: knowledge.name,
+        subject: knowledge.subject,
+        text: knowledge.text,
+        date: knowledge.date,
+        labels: knowledge.labels,
+        read: knowledge.read || false
+      })
+      setLabelsInput(knowledge.labels.join(', '))
+      setHasChanges(false)
+    }
+  }, [knowledge, mail.isCreating, mail.tempKnowledge])
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setHasChanges(true)
+  }
+
+  const handleLabelsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLabelsInput(e.target.value)
+    setHasChanges(true)
+  }
+
+  const handleSave = async () => {
+    if (!hasChanges) return
+
+    setIsSubmitting(true)
+
+    try {
+      // ラベルをカンマ区切りで分割し、トリムして空の値を除外
+      const labels = labelsInput
+        .split(',')
+        .map((label) => label.trim())
+        .filter((label) => label !== '')
+
+      const dataToSave = {
+        ...formData,
+        labels
+      }
+
+      if (mail.isCreating) {
+        // 新しいナレッジを追加
+        await addKnowledge(dataToSave)
+
+        // 編集モードを終了
+        setMail({
+          ...mail,
+          isCreating: false,
+          tempKnowledge: null
+        })
+      } else if (knowledge) {
+        // 既存のナレッジを更新
+        await updateKnowledge({
+          ...dataToSave,
+          id: knowledge.id
+        })
+      }
+
+      // 変更フラグをリセット
+      setHasChanges(false)
+
+      // 親コンポーネントに通知
+      if (onKnowledgeSaved) {
+        onKnowledgeSaved()
+      }
+    } catch (error) {
+      console.error('Failed to save knowledge:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCancel = () => {
+    if (mail.isCreating) {
+      setMail({
+        ...mail,
+        isCreating: false,
+        tempKnowledge: null
+      })
+    } else if (knowledge) {
+      // 元のデータに戻す
+      setFormData({
+        name: knowledge.name,
+        subject: knowledge.subject,
+        text: knowledge.text,
+        date: knowledge.date,
+        labels: knowledge.labels,
+        read: knowledge.read || false
+      })
+      setLabelsInput(knowledge.labels.join(', '))
+      setHasChanges(false)
+    }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -50,169 +149,98 @@ export function KnowledgeDisplay({ knowledge }: KnowledgeDisplayProps) {
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!knowledge}>
-                <Archive className="h-4 w-4" />
-                <span className="sr-only">Archive</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!knowledge}>
-                <ArchiveX className="h-4 w-4" />
-                <span className="sr-only">Move to junk</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Move to junk</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!knowledge}>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!knowledge && !mail.isCreating}
+              >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Move to trash</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Move to trash</TooltipContent>
-          </Tooltip>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          <Tooltip>
-            <Popover>
-              <PopoverTrigger asChild>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" disabled={!knowledge}>
-                    <Clock className="h-4 w-4" />
-                    <span className="sr-only">Snooze</span>
-                  </Button>
-                </TooltipTrigger>
-              </PopoverTrigger>
-              <PopoverContent className="flex w-[535px] p-0">
-                <div className="flex flex-col gap-2 border-r px-2 py-4">
-                  <div className="px-4 text-sm font-medium">Snooze until</div>
-                  <div className="grid min-w-[250px] gap-1">
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Later today{' '}
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addHours(today, 4), 'E, h:m b')}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Tomorrow
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addDays(today, 1), 'E, h:m b')}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      This weekend
-                      <span className="ml-auto text-muted-foreground">
-                        {format(nextSaturday(today), 'E, h:m b')}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Next week
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addDays(today, 7), 'E, h:m b')}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-2">
-                  <Calendar />
-                </div>
-              </PopoverContent>
-            </Popover>
-            <TooltipContent>Snooze</TooltipContent>
+            <TooltipContent>ゴミ箱に入れる</TooltipContent>
           </Tooltip>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!knowledge}>
-                <Reply className="h-4 w-4" />
-                <span className="sr-only">Reply</span>
+          {(hasChanges || mail.isCreating) && (
+            <>
+              <Button variant="ghost" size="sm" onClick={handleCancel}>
+                <X className="mr-2 h-4 w-4" />
+                キャンセル
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reply</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!knowledge}>
-                <ReplyAll className="h-4 w-4" />
-                <span className="sr-only">Reply all</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reply all</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!knowledge}>
-                <Forward className="h-4 w-4" />
-                <span className="sr-only">Forward</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Forward</TooltipContent>
-          </Tooltip>
+              {hasChanges && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSubmitting}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {isSubmitting ? '保存中...' : '保存'}
+                </Button>
+              )}
+            </>
+          )}
         </div>
-        <Separator orientation="vertical" className="mx-2 h-6" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" disabled={!knowledge}>
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">More</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-            <DropdownMenuItem>Star thread</DropdownMenuItem>
-            <DropdownMenuItem>Add label</DropdownMenuItem>
-            <DropdownMenuItem>Mute thread</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
       <Separator />
-      {knowledge ? (
+
+      {knowledge || mail.isCreating ? (
         <div className="flex flex-1 flex-col">
           <div className="flex items-start p-4">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>
-                <AvatarImage alt={knowledge.name} />
+                <AvatarImage alt={formData.name || 'New Knowledge'} />
                 <AvatarFallback>
-                  {knowledge.name
-                    .split(' ')
-                    .map((chunk) => chunk[0])
-                    .join('')}
+                  {formData.name
+                    ? formData.name
+                        .split(' ')
+                        .map((chunk) => chunk[0])
+                        .join('')
+                    : 'NK'}
                 </AvatarFallback>
               </Avatar>
               <div className="grid gap-1">
-                <div className="font-semibold">{knowledge.name}</div>
-                <div className="line-clamp-1 text-xs">{knowledge.subject}</div>
+                <Input
+                  className="font-semibold text-base border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                  placeholder="名前を入力"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+                <Input
+                  className="line-clamp-1 text-xs border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                  placeholder="件名を入力"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                />
                 <div className="line-clamp-1 text-xs">
                   <span className="font-medium">タグ:</span>{' '}
-                  {knowledge.labels.join(', ')}
+                  <Input
+                    className="inline-block w-auto border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                    placeholder="タグをカンマ区切りで入力"
+                    value={labelsInput}
+                    onChange={handleLabelsChange}
+                  />
                 </div>
               </div>
             </div>
-            {knowledge.date && (
-              <div className="ml-auto text-xs text-muted-foreground">
-                {format(new Date(knowledge.date), 'PPpp')}
-              </div>
-            )}
+            <div className="ml-auto text-xs text-muted-foreground">
+              {mail.isCreating
+                ? '新規作成中'
+                : knowledge?.date && format(new Date(knowledge.date), 'PPpp')}
+            </div>
           </div>
           <Separator />
-          <div className="flex-1 whitespace-pre-wrap p-4 text-sm">
-            {knowledge.text}
+          <div className="flex-1 p-4">
+            <Textarea
+              className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="内容を入力"
+              name="text"
+              value={formData.text}
+              onChange={handleChange}
+            />
           </div>
           <Separator className="mt-auto" />
           <div className="p-4">
