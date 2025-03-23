@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { format } from 'date-fns'
 import {
   Inbox,
   Search,
@@ -9,8 +8,10 @@ import {
   Plus,
   X,
   Tag as TagIcon,
-  Book
+  Book,
+  BarChart
 } from 'lucide-react'
+import { DateRange } from 'react-day-picker'
 
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -33,6 +34,8 @@ import { useKnowledge } from '../use-knowledge'
 import { Knowledge, getKnowledgeItemsByPath, emptyTrash } from '@/lib/db'
 import { useSearchWorker } from '@/lib/use-search-worker'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
+import { WeeklyReviewModal } from '@/app/journal/components/weekly-review-modal'
 interface KnowledgeProps {
   accounts: {
     label: string
@@ -65,6 +68,12 @@ export function KnowledgeComponent({
   const [selectedTag, setSelectedTag] = React.useState<string | undefined>(
     undefined
   )
+  // 日付範囲フィルター用の状態
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    undefined
+  )
+  // 週間振り返りモーダル用の状態
+  const [isWeeklyReviewOpen, setIsWeeklyReviewOpen] = React.useState(false)
   // WebWorkerを使用した検索処理のカスタムフックを使用
   const { search, isSearching } = useSearchWorker()
 
@@ -72,7 +81,8 @@ export function KnowledgeComponent({
   const prevSearchRef = React.useRef({
     term: '',
     isTrash: false,
-    tag: undefined as string | undefined
+    tag: undefined as string | undefined,
+    dateRange: undefined as DateRange | undefined
   })
 
   // デバウンス処理: 入力が止まってから検索を実行（800msに増加）
@@ -93,18 +103,27 @@ export function KnowledgeComponent({
       prevSearchRef.current = {
         term: searchTerm,
         isTrash: isTrashView,
-        tag: selectedTag
+        tag: selectedTag,
+        dateRange: dateRange
       }
 
-      if (searchTerm.trim()) {
+      if (
+        searchTerm.trim() ||
+        (dateRange && (dateRange.from || dateRange.to))
+      ) {
         try {
-          console.log(`Searching for: "${searchTerm}" (previous: "${oldTerm}")`)
+          console.log(
+            `Searching for: "${searchTerm}" (previous: "${oldTerm}")${
+              dateRange ? ' with date range' : ''
+            }`
+          )
 
           // WebWorkerを使用して検索を実行（常に実行）
           const searchResults = await search(
             knowledges,
             searchTerm,
-            isTrashView
+            isTrashView,
+            dateRange
           )
           setCurrentItems(searchResults)
         } catch (error) {
@@ -131,8 +150,7 @@ export function KnowledgeComponent({
     }
 
     updateItems()
-  }, [knowledges, isTrashView, searchTerm, selectedTag, search])
-
+  }, [knowledges, isTrashView, searchTerm, selectedTag, dateRange, search])
   // Function to handle tag selection
   const handleTagSelect = (tag: string) => {
     // 同じタグが選択された場合は選択解除
@@ -143,6 +161,10 @@ export function KnowledgeComponent({
       // タグ選択時は検索ワードをクリア
       setInputValue('')
       setSearchTerm('')
+      // 日付範囲もクリア
+      if (dateRange) {
+        setDateRange(undefined)
+      }
     }
   }
 
@@ -154,6 +176,8 @@ export function KnowledgeComponent({
       setIsTrashView(true)
       // タグ選択をリセット
       setSelectedTag(undefined)
+      // 日付範囲をリセット
+      setDateRange(undefined)
       // Reset selection when switching to trash view
       setSelectedKnowledge({
         ...selectedKnowledge,
@@ -195,6 +219,8 @@ export function KnowledgeComponent({
     setIsTrashView(false)
     // タグ選択をリセット
     setSelectedTag(undefined)
+    // 日付範囲をリセット
+    setDateRange(undefined)
     // Reset selection when switching to all view
     setSelectedKnowledge({
       ...selectedKnowledge
@@ -336,53 +362,40 @@ export function KnowledgeComponent({
                     <Trash2 className="mr-2 h-4 w-4" />
                     ゴミ箱を空にする
                   </Button>
+                ) : isJournalView ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsWeeklyReviewOpen(true)}
+                    >
+                      <BarChart className="mr-2 h-4 w-4" />
+                      週間振り返り
+                    </Button>
+                  </div>
                 ) : (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
                       const today = new Date()
-
-                      if (isJournalView) {
-                        // For journal view, create a journal entry with today's date
-                        const todayFormatted = format(today, 'yyyy/MM/dd')
-                        const todayPath = `/journal/${format(
-                          today,
-                          'yyyy-MM-dd'
-                        )}`
-
-                        setSelectedKnowledge({
-                          ...selectedKnowledge,
-                          selected: null,
-                          isCreating: true,
-                          tempKnowledge: {
-                            title: `${todayFormatted}の日記`,
-                            text: '',
-                            date: today.toISOString(),
-                            labels: ['日記'],
-                            read: false,
-                            path: todayPath
-                          }
-                        })
-                      } else {
-                        // For regular knowledge view
-                        setSelectedKnowledge({
-                          ...selectedKnowledge,
-                          selected: null,
-                          isCreating: true,
-                          tempKnowledge: {
-                            title: '',
-                            text: '',
-                            date: today.toISOString(),
-                            labels: [],
-                            read: false
-                          }
-                        })
-                      }
+                      // For regular knowledge view
+                      setSelectedKnowledge({
+                        ...selectedKnowledge,
+                        selected: null,
+                        isCreating: true,
+                        tempKnowledge: {
+                          title: '',
+                          text: '',
+                          date: today.toISOString(),
+                          labels: [],
+                          read: false
+                        }
+                      })
                     }}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    {isJournalView ? '新規ジャーナル' : '新規作成'}
+                    新規作成
                   </Button>
                 )}
                 <TabsList>
@@ -447,11 +460,28 @@ export function KnowledgeComponent({
                   )}
                 </div>
               </form>
-              {isSearching && searchTerm && (
-                <div className="mt-2 text-xs text-muted-foreground">
-                  検索中...
+
+              {/* 日付範囲フィルター */}
+              {isJournalView && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium mb-2">
+                    日付範囲でフィルター
+                  </h3>
+                  <DateRangePicker
+                    dateRange={dateRange}
+                    onDateRangeChange={setDateRange}
+                  />
+                  {/* 日付範囲の結果メッセージはここでは表示せず、下部の共通メッセージ領域で表示 */}
                 </div>
               )}
+
+              {isSearching &&
+                (searchTerm ||
+                  (dateRange && (dateRange.from || dateRange.to))) && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    検索中...
+                  </div>
+                )}
               {searchTerm && !isSearching && (
                 <div className="mt-2 text-xs">
                   {currentItems.length === 0
@@ -459,6 +489,17 @@ export function KnowledgeComponent({
                     : `"${searchTerm}" の検索結果: ${currentItems.length}件`}
                 </div>
               )}
+              {!searchTerm &&
+                dateRange &&
+                (dateRange.from || dateRange.to) &&
+                !isSearching &&
+                !selectedTag && (
+                  <div className="mt-2 text-xs">
+                    {currentItems.length === 0
+                      ? '選択した日付範囲に一致する結果はありません'
+                      : `日付範囲内の結果: ${currentItems.length}件`}
+                  </div>
+                )}
               {!searchTerm && selectedTag && !isSearching && (
                 <div className="mt-2 text-xs">
                   {currentItems.length === 0
@@ -498,6 +539,17 @@ export function KnowledgeComponent({
           />
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Weekly Review Modal */}
+      {isJournalView && (
+        <WeeklyReviewModal
+          isOpen={isWeeklyReviewOpen}
+          onClose={() => setIsWeeklyReviewOpen(false)}
+          journalItems={knowledges.filter(
+            (item) => item.path && item.path.startsWith('/journal/')
+          )}
+        />
+      )}
     </TooltipProvider>
   )
 }

@@ -142,6 +142,33 @@ export default function JournalPage() {
 
   return (
     <div className="hidden flex-col md:flex h-full">
+      <div className="absolute top-4 right-4 z-10">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const today = new Date()
+            const todayFormatted = format(today, 'yyyy/MM/dd')
+            const todayPath = `/journal/${format(today, 'yyyy-MM-dd')}`
+
+            setSelectedKnowledge({
+              ...selectedKnowledge,
+              selected: null,
+              isCreating: true,
+              tempKnowledge: {
+                title: `${todayFormatted}の日記`,
+                text: '',
+                date: today.toISOString(),
+                labels: ['日記'],
+                read: false,
+                path: todayPath
+              }
+            })
+          }}
+        >
+          今日の日記を作成
+        </Button>
+      </div>
       <KnowledgeComponent
         accounts={accounts}
         knowledges={knowledgeItems}

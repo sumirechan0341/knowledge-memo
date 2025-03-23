@@ -15,7 +15,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           success: 'bg-green-600 text-white border-green-700',
           error: 'bg-red-500 text-white border-red-600'
-        }
+        },
+        style: {
+          '--success-bg': 'hsl(142, 76%, 36%)',
+          '--success-text': 'hsl(0, 0%, 100%)',
+          '--success-border': 'hsl(142, 76%, 29%)',
+          '--error-bg': 'hsl(0, 84%, 60%)',
+          '--error-text': 'hsl(0, 0%, 100%)',
+          '--error-border': 'hsl(0, 84%, 50%)'
+        } as React.CSSProperties
       }}
       style={
         {

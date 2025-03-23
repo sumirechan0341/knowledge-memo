@@ -9,6 +9,10 @@ interface SearchWorker extends Worker {
       items: Knowledge[]
       searchTerm: string
       includeTrash: boolean
+      dateRange?: {
+        from?: Date
+        to?: Date
+      }
     }
   }): void
 }
@@ -96,13 +100,15 @@ export function useSearchWorker() {
    * @param items 検索対象のアイテム
    * @param searchTerm 検索ワード
    * @param includeTrash ゴミ箱のアイテムを含めるかどうか
+   * @param dateRange 日付範囲フィルター
    * @returns 検索結果のPromise
    */
   const search = useCallback(
     async (
       items: Knowledge[],
       searchTerm: string,
-      includeTrash: boolean = false
+      includeTrash: boolean = false,
+      dateRange?: { from?: Date; to?: Date }
     ): Promise<Knowledge[]> => {
       // WebWorkerが利用できない場合はエラー
       if (!workerRef.current) {
@@ -121,7 +127,8 @@ export function useSearchWorker() {
         data: {
           items,
           searchTerm,
-          includeTrash
+          includeTrash,
+          dateRange
         }
       })
 

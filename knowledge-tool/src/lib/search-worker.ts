@@ -10,6 +10,10 @@ interface SearchMessage {
     items: Knowledge[]
     searchTerm: string
     includeTrash: boolean
+    dateRange?: {
+      from?: Date
+      to?: Date
+    }
   }
 }
 
@@ -27,10 +31,10 @@ self.onmessage = (event: MessageEvent<SearchMessage>) => {
   const { type, data } = event.data
 
   if (type === 'search') {
-    const { items, searchTerm, includeTrash } = data
+    const { items, searchTerm, includeTrash, dateRange } = data
 
     // 検索処理の実行
-    const results = performSearch(items, searchTerm, includeTrash)
+    const results = performSearch(items, searchTerm, includeTrash, dateRange)
 
     // 結果をメインスレッドに返す
     const resultMessage: SearchResultMessage = {
@@ -50,28 +54,57 @@ self.onmessage = (event: MessageEvent<SearchMessage>) => {
  * @param items 検索対象のナレッジアイテム
  * @param searchTerm 検索ワード
  * @param includeTrash ゴミ箱のアイテムを含めるかどうか
+ * @param dateRange 日付範囲フィルター
  * @returns 検索結果
  */
 function performSearch(
   items: Knowledge[],
   searchTerm: string,
-  includeTrash: boolean
+  includeTrash: boolean,
+  dateRange?: { from?: Date; to?: Date }
 ): Knowledge[] {
-  // 検索ワードが空の場合は全てのアイテムを返す（ゴミ箱の除外処理は行う）
+  // 最初にゴミ箱フィルターを適用
+  let filteredItems = includeTrash
+    ? items
+    : items.filter((item) => item.path !== '/trashbox')
+
+  // 日付範囲フィルターを適用
+  if (dateRange && (dateRange.from || dateRange.to)) {
+    filteredItems = filteredItems.filter((item) => {
+      const itemDate = new Date(item.date)
+
+      // fromのみ指定されている場合
+      if (dateRange.from && !dateRange.to) {
+        return itemDate >= dateRange.from
+      }
+
+      // toのみ指定されている場合
+      if (!dateRange.from && dateRange.to) {
+        // toは終日を含めるため、日付の最後（23:59:59）までを含める
+        const endOfDay = new Date(dateRange.to)
+        endOfDay.setHours(23, 59, 59, 999)
+        return itemDate <= endOfDay
+      }
+
+      // 両方指定されている場合
+      if (dateRange.from && dateRange.to) {
+        const endOfDay = new Date(dateRange.to)
+        endOfDay.setHours(23, 59, 59, 999)
+        return itemDate >= dateRange.from && itemDate <= endOfDay
+      }
+
+      return true
+    })
+  }
+
+  // 検索ワードが空の場合は日付フィルターのみ適用した結果を返す
   if (!searchTerm.trim()) {
-    return includeTrash
-      ? items
-      : items.filter((item) => item.path !== '/trashbox')
+    return filteredItems
   }
 
   // 検索ワードで絞り込み（タイトルと本文で検索）
   const searchTermLower = searchTerm.toLowerCase()
-  const filtered = items.filter((item) => {
-    // ゴミ箱のアイテムを除外（includeTrashがtrueの場合は含める）
-    if (!includeTrash && item.path === '/trashbox') {
-      return false
-    }
-
+  const filtered = filteredItems.filter((item) => {
     // タイトルと本文で検索
     const titleOrTextMatch =
       item.title.toLowerCase().includes(searchTermLower) ||
