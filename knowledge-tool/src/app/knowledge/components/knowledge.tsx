@@ -55,7 +55,7 @@ export function KnowledgeComponent({
   onKnowledgeAdded
 }: KnowledgeProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
-  const [mail, setMail] = useKnowledge()
+  const [selectedKnowledge, setSelectedKnowledge] = useKnowledge()
   const [currentItems, setCurrentItems] = React.useState(knowledges)
   const [isTrashView, setIsTrashView] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
@@ -125,8 +125,8 @@ export function KnowledgeComponent({
       setCurrentItems(trashedItems)
       setIsTrashView(true)
       // Reset selection when switching to trash view
-      setMail({
-        ...mail,
+      setSelectedKnowledge({
+        ...selectedKnowledge,
         selected: null,
         isCreating: false,
         tempKnowledge: null
@@ -150,11 +150,8 @@ export function KnowledgeComponent({
     setCurrentItems(knowledges)
     setIsTrashView(false)
     // Reset selection when switching to all view
-    setMail({
-      ...mail,
-      selected: null,
-      isCreating: false,
-      tempKnowledge: null
+    setSelectedKnowledge({
+      ...selectedKnowledge
     })
   }
 
@@ -296,120 +293,6 @@ export function KnowledgeComponent({
                 label: '21',
                 icon: Archive,
                 variant: 'ghost'
-              },
-              {
-                title: 'React',
-                label: '3',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'JavaScript',
-                label: '2',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'TypeScript',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              },
-              {
-                title: 'React',
-                label: '3',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'JavaScript',
-                label: '2',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'TypeScript',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
               }
             ]}
           />
@@ -440,8 +323,8 @@ export function KnowledgeComponent({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setMail({
-                        ...mail,
+                      setSelectedKnowledge({
+                        ...selectedKnowledge,
                         selected: null,
                         isCreating: true,
                         tempKnowledge: {
@@ -529,9 +412,11 @@ export function KnowledgeComponent({
         >
           <KnowledgeDisplay
             knowledge={
-              mail.isCreating
+              selectedKnowledge.isCreating
                 ? null
-                : currentItems.find((item) => item.id === mail.selected) || null
+                : currentItems.find(
+                    (item) => item.id === selectedKnowledge.selected
+                  ) || null
             }
             searchTerm={searchTerm}
             onKnowledgeSaved={() => {

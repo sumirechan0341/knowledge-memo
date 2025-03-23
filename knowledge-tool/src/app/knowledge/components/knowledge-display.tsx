@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import { Trash2, Save, X, RotateCcw } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -22,14 +23,13 @@ import {
 import { useKnowledge } from '../use-knowledge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { highlightText } from '@/lib/highlight-text'
+// import { highlightText } from '@/lib/highlight-text'
 
 interface KnowledgeDisplayProps {
   knowledge: Knowledge | null
   onKnowledgeSaved?: () => void
   searchTerm?: string
 }
-
 export function KnowledgeDisplay({
   knowledge,
   onKnowledgeSaved,
@@ -46,6 +46,8 @@ export function KnowledgeDisplay({
   })
   const [labelsInput, setLabelsInput] = useState('')
   const [hasChanges, setHasChanges] = useState(false)
+  // レンダリング更新用のバージョン状態
+  const [renderVersion, setRenderVersion] = useState(0)
 
   // 既存のナレッジが選択された場合、またはtempKnowledgeが設定された場合、フォームデータを更新
   useEffect(() => {
@@ -64,7 +66,7 @@ export function KnowledgeDisplay({
       setLabelsInput(knowledge.labels.join(', '))
       setHasChanges(false)
     }
-  }, [knowledge, mail.isCreating, mail.tempKnowledge])
+  }, [knowledge, mail.isCreating, mail.tempKnowledge, renderVersion])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -78,8 +80,7 @@ export function KnowledgeDisplay({
     setLabelsInput(e.target.value)
     setHasChanges(true)
   }
-
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!hasChanges) return
 
     setIsSubmitting(true)
@@ -106,27 +107,75 @@ export function KnowledgeDisplay({
           isCreating: false,
           tempKnowledge: null
         })
+
+        toast.success('新しいナレッジを作成しました')
       } else if (knowledge) {
         // 既存のナレッジを更新
-        await updateKnowledge({
+        const updatedKnowledge = {
           ...dataToSave,
-          id: knowledge.id
+          id: knowledge.id,
+          path: knowledge.path,
+          originalPath: knowledge.originalPath
+        }
+
+        await updateKnowledge(updatedKnowledge)
+
+        // フォームデータを更新して表示を反映
+        setFormData({
+          title: updatedKnowledge.title,
+          text: updatedKnowledge.text,
+          date: updatedKnowledge.date,
+          labels: updatedKnowledge.labels,
+          read: updatedKnowledge.read || false
         })
+
+        toast.success('ナレッジを保存しました')
       }
 
       // 変更フラグをリセット
       setHasChanges(false)
 
-      // 親コンポーネントに通知
+      // レンダリング更新のためにバージョンをインクリメント
+      setRenderVersion((prev) => prev + 1)
+
+      // 親コンポーネントに通知（新規作成時と既存ナレッジ更新時の両方）
       if (onKnowledgeSaved) {
         onKnowledgeSaved()
       }
     } catch (error) {
       console.error('Failed to save knowledge:', error)
+      toast.error('ナレッジの保存に失敗しました')
     } finally {
       setIsSubmitting(false)
     }
-  }
+  }, [
+    hasChanges,
+    labelsInput,
+    formData,
+    mail,
+    knowledge,
+    setMail,
+    onKnowledgeSaved,
+    setRenderVersion
+  ])
+
+  // Ctrl+Sでの保存を有効にする
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S (Windows) または Command+S (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault() // ブラウザのデフォルト保存動作を防止
+        if (hasChanges) {
+          handleSave()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleSave, hasChanges])
 
   const handleCancel = () => {
     if (mail.isCreating) {
@@ -157,8 +206,10 @@ export function KnowledgeDisplay({
         if (onKnowledgeSaved) {
           onKnowledgeSaved()
         }
+        toast.success('ナレッジをゴミ箱に移動しました')
       } catch (error) {
         console.error('Failed to move knowledge to trash:', error)
+        toast.error('ゴミ箱への移動に失敗しました')
       }
     }
   }
@@ -171,8 +222,10 @@ export function KnowledgeDisplay({
         if (onKnowledgeSaved) {
           onKnowledgeSaved()
         }
+        toast.success('ナレッジをゴミ箱から復元しました')
       } catch (error) {
         console.error('Failed to restore knowledge from trash:', error)
+        toast.error('ゴミ箱からの復元に失敗しました')
       }
     }
   }
@@ -238,7 +291,7 @@ export function KnowledgeDisplay({
       <Separator className="flex-shrink-0" />
 
       {knowledge || mail.isCreating ? (
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col" key={renderVersion}>
           <div className="flex items-start p-4 flex-shrink-0">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>
@@ -279,21 +332,14 @@ export function KnowledgeDisplay({
           </div>
           <Separator className="flex-shrink-0" />
           <div className="flex-1 p-4 overflow-auto">
-            {mail.isCreating || hasChanges ? (
-              <Textarea
-                className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="内容を入力"
-                name="text"
-                value={formData.text}
-                onChange={handleChange}
-              />
-            ) : (
-              <div className="w-full h-full min-h-[200px] whitespace-pre-wrap">
-                {searchTerm
-                  ? highlightText(formData.text, searchTerm)
-                  : formData.text}
-              </div>
-            )}
+            <Textarea
+              className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="内容を入力"
+              name="text"
+              value={searchTerm && !hasChanges ? formData.text : formData.text}
+              onChange={handleChange}
+              readOnly={knowledge?.path === '/trashbox'}
+            />
           </div>
           <Separator className="mt-auto flex-shrink-0" />
           <div className="p-4 flex-shrink-0">

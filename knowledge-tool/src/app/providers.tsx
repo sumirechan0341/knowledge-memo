@@ -1,8 +1,14 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { CookiesProvider } from 'next-client-cookies'
+import { ThemeProvider } from 'next-themes'
+import { Toaster } from '@/components/ui/sonner'
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <CookiesProvider value={[]}>{children}</CookiesProvider>
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      {children}
+      <Toaster />
+    </ThemeProvider>
+  )
 }
