@@ -12,7 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { Knowledge, addKnowledge, updateKnowledge } from '@/lib/db'
+import { Knowledge, addKnowledge, updateKnowledge, moveToTrash } from '@/lib/db'
 import { useKnowledge } from '../use-knowledge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -143,6 +143,20 @@ export function KnowledgeDisplay({
     }
   }
 
+  const handleMoveToTrash = async () => {
+    if (knowledge?.id) {
+      try {
+        await moveToTrash(knowledge.id)
+        // 親コンポーネントに通知
+        if (onKnowledgeSaved) {
+          onKnowledgeSaved()
+        }
+      } catch (error) {
+        console.error('Failed to move knowledge to trash:', error)
+      }
+    }
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center p-2">
@@ -152,7 +166,8 @@ export function KnowledgeDisplay({
               <Button
                 variant="ghost"
                 size="icon"
-                disabled={!knowledge && !mail.isCreating}
+                disabled={!knowledge || mail.isCreating}
+                onClick={handleMoveToTrash}
               >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Move to trash</span>

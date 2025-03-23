@@ -10,6 +10,7 @@ export interface Knowledge {
   date: string
   labels: string[]
   read?: boolean
+  path?: string // パスベースの整理 (例: '/trashbox' はゴミ箱に入ったナレッジ)
 }
 
 // IndexedDBのスキーマ定義
@@ -38,13 +39,20 @@ async function getDB() {
   })
 }
 
-// ナレッジデータをすべて取得する関数（更新日時の新しい順）
-export async function getKnowledgeItems(): Promise<Knowledge[]> {
+// ナレッジデータをすべて取得する関数（更新日時の新しい順、デフォルトではゴミ箱以外）
+export async function getKnowledgeItems(
+  includeTrash: boolean = false
+): Promise<Knowledge[]> {
   const db = await getDB()
   const items = await db.getAll(STORE_NAME)
 
+  // ゴミ箱のアイテムを除外（includeTrashがtrueの場合は含める）
+  const filtered = includeTrash
+    ? items
+    : items.filter((item) => item.path !== '/trashbox')
+
   // 日付の新しい順（降順）にソート
-  return items.sort((a, b) => {
+  return filtered.sort((a, b) => {
     const dateA = new Date(a.date).getTime()
     const dateB = new Date(b.date).getTime()
     return dateB - dateA
@@ -65,10 +73,55 @@ export async function updateKnowledge(item: Knowledge): Promise<void> {
   await db.put(STORE_NAME, item)
 }
 
-// ナレッジデータを削除する関数
+// ナレッジデータをゴミ箱に移動する関数
+export async function moveToTrash(id: number): Promise<void> {
+  const db = await getDB()
+  const knowledge = await db.get(STORE_NAME, id)
+  if (knowledge) {
+    knowledge.path = '/trashbox'
+    await db.put(STORE_NAME, knowledge)
+  }
+}
+
+// ナレッジデータを完全に削除する関数
 export async function deleteKnowledge(id: number): Promise<void> {
   const db = await getDB()
   await db.delete(STORE_NAME, id)
+}
+
+// ゴミ箱内のすべてのナレッジを完全に削除する関数
+export async function emptyTrash(): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction(STORE_NAME, 'readwrite')
+  const items = await tx.store.getAll()
+
+  for (const item of items) {
+    if (item.path === '/trashbox' && item.id !== undefined) {
+      await tx.store.delete(item.id)
+    }
+  }
+
+  await tx.done
+}
+
+// 特定のパスのナレッジデータを取得する関数
+export async function getKnowledgeItemsByPath(
+  path: string | null
+): Promise<Knowledge[]> {
+  const db = await getDB()
+  const items = await db.getAll(STORE_NAME)
+
+  // パスでフィルタリング
+  const filtered = path
+    ? items.filter((item) => item.path === path)
+    : items.filter((item) => !item.path || item.path === '') // パスなしのアイテム
+
+  // 日付の新しい順（降順）にソート
+  return filtered.sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    return dateB - dateA
+  })
 }
 
 // モックデータをIndexedDBに初期化する関数

@@ -29,7 +29,7 @@ import { KnowledgeDisplay } from './knowledge-display'
 import { KnowledgeList } from './knowledge-list'
 import { Nav } from './nav'
 import { useKnowledge } from '../use-knowledge'
-import { Knowledge } from '@/lib/db'
+import { Knowledge, getKnowledgeItemsByPath, emptyTrash } from '@/lib/db'
 interface KnowledgeProps {
   accounts: {
     label: string
@@ -53,6 +53,63 @@ export function KnowledgeComponent({
 }: KnowledgeProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const [mail, setMail] = useKnowledge()
+  const [currentItems, setCurrentItems] = React.useState(knowledges)
+  const [isTrashView, setIsTrashView] = React.useState(false)
+
+  // Update currentItems when knowledges prop changes
+  React.useEffect(() => {
+    if (!isTrashView) {
+      setCurrentItems(knowledges)
+    }
+  }, [knowledges, isTrashView])
+
+  // Function to handle viewing trash items
+  const handleViewTrash = async () => {
+    try {
+      const trashedItems = await getKnowledgeItemsByPath('/trashbox')
+      setCurrentItems(trashedItems)
+      setIsTrashView(true)
+      // Reset selection when switching to trash view
+      setMail({
+        ...mail,
+        selected: null,
+        isCreating: false,
+        tempKnowledge: null
+      })
+    } catch (error) {
+      console.error('Failed to fetch trashed items:', error)
+    }
+  }
+
+  // Function to handle viewing all items (non-trash)
+  const handleViewAll = async () => {
+    setCurrentItems(knowledges)
+    setIsTrashView(false)
+    // Reset selection when switching to all view
+    setMail({
+      ...mail,
+      selected: null,
+      isCreating: false,
+      tempKnowledge: null
+    })
+  }
+
+  // Function to handle emptying the trash
+  const handleEmptyTrash = async () => {
+    if (confirm('ゴミ箱を空にしますか？この操作は元に戻せません。')) {
+      try {
+        await emptyTrash()
+        // Refresh the trash view
+        handleViewTrash()
+        // Notify parent component
+        if (onKnowledgeAdded) {
+          onKnowledgeAdded()
+        }
+      } catch (error) {
+        console.error('Failed to empty trash:', error)
+      }
+    }
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -102,9 +159,10 @@ export function KnowledgeComponent({
             links={[
               {
                 title: 'すべて',
-                label: '128',
+                label: knowledges.length.toString(),
                 icon: Inbox,
-                variant: 'default'
+                variant: isTrashView ? 'ghost' : 'default',
+                onClick: handleViewAll
               },
               {
                 title: 'プログラミング',
@@ -128,7 +186,8 @@ export function KnowledgeComponent({
                 title: 'ゴミ箱',
                 label: '',
                 icon: Trash2,
-                variant: 'ghost'
+                variant: isTrashView ? 'default' : 'ghost',
+                onClick: handleViewTrash
               },
               {
                 title: 'アーカイブ',
@@ -179,30 +238,43 @@ export function KnowledgeComponent({
         <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
           <Tabs defaultValue="all">
             <div className="flex items-center px-4 py-2">
-              <h1 className="text-xl font-bold">ナレッジベース</h1>
+              <h1 className="text-xl font-bold">
+                {isTrashView ? 'ゴミ箱' : 'ナレッジベース'}
+              </h1>
               <div className="flex items-center ml-auto gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setMail({
-                      ...mail,
-                      selected: null,
-                      isCreating: true,
-                      tempKnowledge: {
-                        name: '',
-                        subject: '',
-                        text: '',
-                        date: new Date().toISOString(),
-                        labels: [],
-                        read: false
-                      }
-                    })
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  新規作成
-                </Button>
+                {isTrashView ? (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleEmptyTrash}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    ゴミ箱を空にする
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setMail({
+                        ...mail,
+                        selected: null,
+                        isCreating: true,
+                        tempKnowledge: {
+                          name: '',
+                          subject: '',
+                          text: '',
+                          date: new Date().toISOString(),
+                          labels: [],
+                          read: false
+                        }
+                      })
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    新規作成
+                  </Button>
+                )}
                 <TabsList>
                   <TabsTrigger
                     value="all"
@@ -229,7 +301,7 @@ export function KnowledgeComponent({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <KnowledgeList items={knowledges} />
+              <KnowledgeList items={currentItems} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
@@ -239,7 +311,7 @@ export function KnowledgeComponent({
             knowledge={
               mail.isCreating
                 ? null
-                : knowledges.find((item) => item.id === mail.selected) || null
+                : currentItems.find((item) => item.id === mail.selected) || null
             }
             onKnowledgeSaved={onKnowledgeAdded}
           />
