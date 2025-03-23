@@ -1,7 +1,16 @@
 'use client'
 
 import * as React from 'react'
-import { Inbox, Search, Trash2, Plus, X, Tag as TagIcon } from 'lucide-react'
+import { format } from 'date-fns'
+import {
+  Inbox,
+  Search,
+  Trash2,
+  Plus,
+  X,
+  Tag as TagIcon,
+  Book
+} from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -35,6 +44,7 @@ interface KnowledgeProps {
   defaultCollapsed?: boolean
   navCollapsedSize: number
   onKnowledgeAdded?: () => void
+  isJournalView?: boolean
 }
 
 export function KnowledgeComponent({
@@ -43,7 +53,8 @@ export function KnowledgeComponent({
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
   navCollapsedSize,
-  onKnowledgeAdded
+  onKnowledgeAdded,
+  isJournalView = false
 }: KnowledgeProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const [selectedKnowledge, setSelectedKnowledge] = useKnowledge()
@@ -259,8 +270,28 @@ export function KnowledgeComponent({
                 title: 'すべて',
                 label: knowledges.length.toString(),
                 icon: Inbox,
-                variant: isTrashView ? 'ghost' : 'default',
-                onClick: handleViewAll
+                variant: isTrashView
+                  ? 'ghost'
+                  : isJournalView
+                  ? 'ghost'
+                  : 'default',
+                onClick: isJournalView
+                  ? () => {
+                      window.location.href = '/'
+                    }
+                  : handleViewAll
+              },
+              {
+                title: 'ジャーナル',
+                label: '',
+                icon: Book,
+                variant: isJournalView ? 'default' : 'ghost',
+                onClick: () => {
+                  if (!isJournalView) {
+                    // Navigate to journal page
+                    window.location.href = '/journal'
+                  }
+                }
               },
               {
                 title: 'ゴミ箱',
@@ -289,7 +320,11 @@ export function KnowledgeComponent({
           <Tabs defaultValue="all" className="h-full flex flex-col">
             <div className="flex items-center px-4 py-2 h-[52px]">
               <h1 className="text-xl font-bold">
-                {isTrashView ? 'ゴミ箱' : 'TSUREDURE - 徒然なるままに'}
+                {isTrashView
+                  ? 'ゴミ箱'
+                  : isJournalView
+                  ? 'ジャーナル'
+                  : 'TSUREDURE - 徒然なるままに'}
               </h1>
               <div className="flex items-center ml-auto gap-x-2">
                 {isTrashView ? (
@@ -306,22 +341,48 @@ export function KnowledgeComponent({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setSelectedKnowledge({
-                        ...selectedKnowledge,
-                        selected: null,
-                        isCreating: true,
-                        tempKnowledge: {
-                          title: '',
-                          text: '',
-                          date: new Date().toISOString(),
-                          labels: [],
-                          read: false
-                        }
-                      })
+                      const today = new Date()
+
+                      if (isJournalView) {
+                        // For journal view, create a journal entry with today's date
+                        const todayFormatted = format(today, 'yyyy/MM/dd')
+                        const todayPath = `/journal/${format(
+                          today,
+                          'yyyy-MM-dd'
+                        )}`
+
+                        setSelectedKnowledge({
+                          ...selectedKnowledge,
+                          selected: null,
+                          isCreating: true,
+                          tempKnowledge: {
+                            title: `${todayFormatted}の日記`,
+                            text: '',
+                            date: today.toISOString(),
+                            labels: ['日記'],
+                            read: false,
+                            path: todayPath
+                          }
+                        })
+                      } else {
+                        // For regular knowledge view
+                        setSelectedKnowledge({
+                          ...selectedKnowledge,
+                          selected: null,
+                          isCreating: true,
+                          tempKnowledge: {
+                            title: '',
+                            text: '',
+                            date: today.toISOString(),
+                            labels: [],
+                            read: false
+                          }
+                        })
+                      }
                     }}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    新規作成
+                    {isJournalView ? '新規ジャーナル' : '新規作成'}
                   </Button>
                 )}
                 <TabsList>
