@@ -32,6 +32,7 @@ import { Nav } from './nav'
 import { useKnowledge } from '../use-knowledge'
 import { Knowledge, getKnowledgeItemsByPath, emptyTrash } from '@/lib/db'
 import { useSearchWorker } from '@/lib/use-search-worker'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
 interface KnowledgeProps {
   accounts: {
     label: string
@@ -513,12 +514,11 @@ export function KnowledgeComponent({
                 </div>
               )}
             </div>
-            <TabsContent
-              value="all"
-              className="m-0 flex flex-col overflow-auto"
-            >
-              <KnowledgeList items={currentItems} searchTerm={searchTerm} />
-            </TabsContent>
+            <ScrollArea className="h-full overflow-y-auto">
+              <TabsContent value="all" className="m-0 flex flex-col">
+                <KnowledgeList items={currentItems} searchTerm={searchTerm} />
+              </TabsContent>
+            </ScrollArea>
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
