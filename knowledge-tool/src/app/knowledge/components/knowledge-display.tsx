@@ -388,13 +388,14 @@ export function KnowledgeDisplay({
                     <Switch id="mute" aria-label="Mute thread" />{' '}
                     お気に入りに追加
                   </Label>
-                  <Button
-                    onClick={(e) => e.preventDefault()}
-                    size="sm"
-                    className="ml-auto"
-                  >
-                    送信
-                  </Button>
+                  <div className="ml-auto flex gap-2">
+                    <Button onClick={(e) => e.preventDefault()} size="sm">
+                      AIで情報整理
+                    </Button>
+                    {/* <Button onClick={(e) => e.preventDefault()} size="sm">
+                      送信
+                    </Button> */}
+                  </div>
                 </div>
               </div>
             </form>
