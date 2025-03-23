@@ -212,7 +212,7 @@ export function KnowledgeComponent({
         >
           <div
             className={cn(
-              'flex h-[52px] items-center justify-center',
+              'flex h-[52px] items-center justify-center py-2',
               isCollapsed ? 'h-[52px]' : 'px-2'
             )}
           >
@@ -420,11 +420,11 @@ export function KnowledgeComponent({
           className="flex flex-col overflow-hidden h-[100vh]"
         >
           <Tabs defaultValue="all" className="h-full flex flex-col">
-            <div className="flex items-center px-4 py-2">
+            <div className="flex items-center px-4 py-2 h-[52px]">
               <h1 className="text-xl font-bold">
                 {isTrashView ? 'ゴミ箱' : 'ナレッジベース'}
               </h1>
-              <div className="flex items-center ml-auto gap-2">
+              <div className="flex items-center ml-auto gap-x-2">
                 {isTrashView ? (
                   <Button
                     variant="destructive"

@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="ja">
       <body
         className={cn(
-          'h-full bg-background font-sans antialiased',
+          'h-full bg-background font-sans antialiased overflow-hidden',
           fontSans.variable
         )}
       >

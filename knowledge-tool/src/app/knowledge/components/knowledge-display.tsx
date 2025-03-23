@@ -178,8 +178,8 @@ export function KnowledgeDisplay({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-auto">
-      <div className="flex items-center p-2 flex-shrink-0">
+    <div className="flex flex-col overflow-y-auto">
+      <div className="flex items-center p-2 flex-shrink-0 h-[52px]">
         <div className="flex items-center gap-2">
           {knowledge?.path === '/trashbox' ? (
             <Tooltip>
