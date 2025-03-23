@@ -11,6 +11,7 @@ export interface Knowledge {
   labels: string[]
   read?: boolean
   path?: string // パスベースの整理 (例: '/trashbox' はゴミ箱に入ったナレッジ)
+  originalPath?: string // ゴミ箱に移動する前の元のパス
 }
 
 // IndexedDBのスキーマ定義
@@ -78,6 +79,8 @@ export async function moveToTrash(id: number): Promise<void> {
   const db = await getDB()
   const knowledge = await db.get(STORE_NAME, id)
   if (knowledge) {
+    // 元のパスを保存
+    knowledge.originalPath = knowledge.path || ''
     knowledge.path = '/trashbox'
     await db.put(STORE_NAME, knowledge)
   }
@@ -87,6 +90,18 @@ export async function moveToTrash(id: number): Promise<void> {
 export async function deleteKnowledge(id: number): Promise<void> {
   const db = await getDB()
   await db.delete(STORE_NAME, id)
+}
+
+// ゴミ箱からナレッジを元に戻す関数
+export async function restoreFromTrash(id: number): Promise<void> {
+  const db = await getDB()
+  const knowledge = await db.get(STORE_NAME, id)
+  if (knowledge && knowledge.path === '/trashbox') {
+    // 元のパスに戻す
+    knowledge.path = knowledge.originalPath || ''
+    knowledge.originalPath = undefined // 元のパス情報をクリア
+    await db.put(STORE_NAME, knowledge)
+  }
 }
 
 // ゴミ箱内のすべてのナレッジを完全に削除する関数

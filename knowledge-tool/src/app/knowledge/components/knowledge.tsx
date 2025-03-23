@@ -81,6 +81,15 @@ export function KnowledgeComponent({
     }
   }
 
+  // Function to refresh the current view (used after restore from trash)
+  const refreshCurrentView = async () => {
+    if (isTrashView) {
+      await handleViewTrash()
+    } else {
+      handleViewAll()
+    }
+  }
+
   // Function to handle viewing all items (non-trash)
   const handleViewAll = async () => {
     setCurrentItems(knowledges)
@@ -313,7 +322,12 @@ export function KnowledgeComponent({
                 ? null
                 : currentItems.find((item) => item.id === mail.selected) || null
             }
-            onKnowledgeSaved={onKnowledgeAdded}
+            onKnowledgeSaved={() => {
+              refreshCurrentView()
+              if (onKnowledgeAdded) {
+                onKnowledgeAdded()
+              }
+            }}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

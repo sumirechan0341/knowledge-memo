@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { Trash2, Save, X } from 'lucide-react'
+import { Trash2, Save, X, RotateCcw } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,7 +12,13 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { Knowledge, addKnowledge, updateKnowledge, moveToTrash } from '@/lib/db'
+import {
+  Knowledge,
+  addKnowledge,
+  updateKnowledge,
+  moveToTrash,
+  restoreFromTrash
+} from '@/lib/db'
 import { useKnowledge } from '../use-knowledge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -157,24 +163,55 @@ export function KnowledgeDisplay({
     }
   }
 
+  const handleRestoreFromTrash = async () => {
+    if (knowledge?.id) {
+      try {
+        await restoreFromTrash(knowledge.id)
+        // 親コンポーネントに通知
+        if (onKnowledgeSaved) {
+          onKnowledgeSaved()
+        }
+      } catch (error) {
+        console.error('Failed to restore knowledge from trash:', error)
+      }
+    }
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center p-2">
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!knowledge || mail.isCreating}
-                onClick={handleMoveToTrash}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Move to trash</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>ゴミ箱に入れる</TooltipContent>
-          </Tooltip>
+          {knowledge?.path === '/trashbox' ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={!knowledge || mail.isCreating}
+                  onClick={handleRestoreFromTrash}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span className="sr-only">Restore from trash</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>ゴミ箱から復元</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={!knowledge || mail.isCreating}
+                  onClick={handleMoveToTrash}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Move to trash</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>ゴミ箱に入れる</TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <div className="ml-auto flex items-center gap-2">
           {(hasChanges || mail.isCreating) && (
