@@ -1,22 +1,12 @@
 'use client'
 
 import * as React from 'react'
-import {
-  Archive,
-  Inbox,
-  Search,
-  Send,
-  Trash2,
-  Code,
-  FileText,
-  Tag,
-  Plus,
-  X
-} from 'lucide-react'
+import { Inbox, Search, Trash2, Plus, X, Tag as TagIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -29,6 +19,7 @@ import { AccountSwitcher } from './account-switcher'
 import { KnowledgeDisplay } from './knowledge-display'
 import { KnowledgeList } from './knowledge-list'
 import { Nav } from './nav'
+import { TagList } from './tag-list'
 import { useKnowledge } from '../use-knowledge'
 import { Knowledge, getKnowledgeItemsByPath, emptyTrash } from '@/lib/db'
 import { useSearchWorker } from '@/lib/use-search-worker'
@@ -60,13 +51,17 @@ export function KnowledgeComponent({
   const [isTrashView, setIsTrashView] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
   const [searchTerm, setSearchTerm] = React.useState('')
+  const [selectedTag, setSelectedTag] = React.useState<string | undefined>(
+    undefined
+  )
   // WebWorkerを使用した検索処理のカスタムフックを使用
   const { search, isSearching } = useSearchWorker()
 
   // 前回の検索条件を保持するためのref
   const prevSearchRef = React.useRef({
     term: '',
-    isTrash: false
+    isTrash: false,
+    tag: undefined as string | undefined
   })
 
   // デバウンス処理: 入力が止まってから検索を実行（800msに増加）
@@ -86,7 +81,8 @@ export function KnowledgeComponent({
       // 検索条件を更新（常に最新の検索条件を保持）
       prevSearchRef.current = {
         term: searchTerm,
-        isTrash: isTrashView
+        isTrash: isTrashView,
+        tag: selectedTag
       }
 
       if (searchTerm.trim()) {
@@ -103,6 +99,14 @@ export function KnowledgeComponent({
         } catch (error) {
           console.error('Search failed:', error)
         }
+      } else if (selectedTag) {
+        // タグでフィルタリング
+        const taggedItems = knowledges.filter((item) =>
+          !isTrashView
+            ? item.path !== '/trashbox' && item.labels.includes(selectedTag)
+            : item.path === '/trashbox' && item.labels.includes(selectedTag)
+        )
+        setCurrentItems(taggedItems)
       } else if (isTrashView) {
         try {
           const trashedItems = await getKnowledgeItemsByPath('/trashbox')
@@ -116,7 +120,20 @@ export function KnowledgeComponent({
     }
 
     updateItems()
-  }, [knowledges, isTrashView, searchTerm, search])
+  }, [knowledges, isTrashView, searchTerm, selectedTag, search])
+
+  // Function to handle tag selection
+  const handleTagSelect = (tag: string) => {
+    // 同じタグが選択された場合は選択解除
+    if (selectedTag === tag) {
+      setSelectedTag(undefined)
+    } else {
+      setSelectedTag(tag)
+      // タグ選択時は検索ワードをクリア
+      setInputValue('')
+      setSearchTerm('')
+    }
+  }
 
   // Function to handle viewing trash items
   const handleViewTrash = async () => {
@@ -124,6 +141,8 @@ export function KnowledgeComponent({
       const trashedItems = await getKnowledgeItemsByPath('/trashbox')
       setCurrentItems(trashedItems)
       setIsTrashView(true)
+      // タグ選択をリセット
+      setSelectedTag(undefined)
       // Reset selection when switching to trash view
       setSelectedKnowledge({
         ...selectedKnowledge,
@@ -163,6 +182,8 @@ export function KnowledgeComponent({
   const handleViewAll = async () => {
     setCurrentItems(knowledges)
     setIsTrashView(false)
+    // タグ選択をリセット
+    setSelectedTag(undefined)
     // Reset selection when switching to all view
     setSelectedKnowledge({
       ...selectedKnowledge
@@ -242,74 +263,22 @@ export function KnowledgeComponent({
                 onClick: handleViewAll
               },
               {
-                title: 'プログラミング',
-                label: '9',
-                icon: Code,
-                variant: 'ghost'
-              },
-              {
-                title: 'ツール',
-                label: '',
-                icon: Send,
-                variant: 'ghost'
-              },
-              {
-                title: 'ドキュメント',
-                label: '23',
-                icon: FileText,
-                variant: 'ghost'
-              },
-              {
                 title: 'ゴミ箱',
                 label: '',
                 icon: Trash2,
                 variant: isTrashView ? 'default' : 'ghost',
                 onClick: handleViewTrash
-              },
-              {
-                title: 'アーカイブ',
-                label: '',
-                icon: Archive,
-                variant: 'ghost'
               }
             ]}
           />
           <Separator />
-          <Nav
-            isCollapsed={isCollapsed}
-            links={[
-              {
-                title: 'React',
-                label: '3',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'JavaScript',
-                label: '2',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'TypeScript',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'Next.js',
-                label: '1',
-                icon: Tag,
-                variant: 'ghost'
-              },
-              {
-                title: 'その他',
-                label: '21',
-                icon: Archive,
-                variant: 'ghost'
-              }
-            ]}
-          />
+          <div className={cn('flex-1', isCollapsed ? 'hidden' : '')}>
+            <TagList
+              knowledges={knowledges}
+              onTagSelect={handleTagSelect}
+              selectedTag={selectedTag}
+            />
+          </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel
@@ -320,7 +289,7 @@ export function KnowledgeComponent({
           <Tabs defaultValue="all" className="h-full flex flex-col">
             <div className="flex items-center px-4 py-2 h-[52px]">
               <h1 className="text-xl font-bold">
-                {isTrashView ? 'ゴミ箱' : 'ナレッジベース'}
+                {isTrashView ? 'ゴミ箱' : 'TSUREDURE'}
               </h1>
               <div className="flex items-center ml-auto gap-x-2">
                 {isTrashView ? (
@@ -373,11 +342,30 @@ export function KnowledgeComponent({
             </div>
             <Separator />
             <div className="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+              {selectedTag && (
+                <div className="mb-2 flex items-center">
+                  <Badge className="mr-2">
+                    <TagIcon className="mr-1 h-3 w-3" />
+                    {selectedTag}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={() => setSelectedTag(undefined)}
+                  >
+                    <X className="h-3 w-3" />
+                    <span className="sr-only">タグ選択をクリア</span>
+                  </Button>
+                </div>
+              )}
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="検索..."
+                    placeholder={
+                      selectedTag ? `"${selectedTag}"内を検索...` : '検索...'
+                    }
                     className="pl-8"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
@@ -408,6 +396,13 @@ export function KnowledgeComponent({
                   {currentItems.length === 0
                     ? `"${searchTerm}" に一致する結果はありません`
                     : `"${searchTerm}" の検索結果: ${currentItems.length}件`}
+                </div>
+              )}
+              {!searchTerm && selectedTag && !isSearching && (
+                <div className="mt-2 text-xs">
+                  {currentItems.length === 0
+                    ? `タグ "${selectedTag}" に一致する結果はありません`
+                    : `タグ "${selectedTag}" の結果: ${currentItems.length}件`}
                 </div>
               )}
             </div>

@@ -48,7 +48,7 @@ export default function KnowledgePage() {
         <div className="text-center">
           <div className="mb-4 text-4xl">⏳</div>
           <p className="text-muted-foreground">
-            ナレッジベースを読み込んでいます...
+            TSUREDUREを読み込んでいます...
           </p>
         </div>
       </div>

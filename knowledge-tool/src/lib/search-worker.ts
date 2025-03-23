@@ -72,10 +72,25 @@ function performSearch(
       return false
     }
 
-    return (
+    // タイトルと本文で検索
+    const titleOrTextMatch =
       item.title.toLowerCase().includes(searchTermLower) ||
       item.text.toLowerCase().includes(searchTermLower)
-    )
+
+    // タグで検索（先頭に#がついている場合はタグ検索と判断）
+    if (searchTermLower.startsWith('#')) {
+      const tagSearchTerm = searchTermLower.substring(1) // #を除去
+      if (tagSearchTerm.trim() === '') {
+        return titleOrTextMatch // #のみの場合は通常検索
+      }
+
+      // タグが検索ワードを含むか確認
+      return item.labels.some((label) =>
+        label.toLowerCase().includes(tagSearchTerm)
+      )
+    }
+
+    return titleOrTextMatch
   })
 
   // 日付の新しい順（降順）にソート

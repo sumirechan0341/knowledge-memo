@@ -10,8 +10,8 @@ const fontSans = FontSans({
 })
 
 export const metadata: Metadata = {
-  title: 'Knowledge Base - 高機能なナレッジ管理ツール',
-  description: '個人やチームのためのナレッジ管理・整理アプリケーション'
+  title: 'TSUREDURE - 徒然なるままに',
+  description: '気軽に残してAIで整理'
 }
 
 export default function RootLayout({
