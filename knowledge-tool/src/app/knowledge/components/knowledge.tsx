@@ -59,9 +59,14 @@ export function KnowledgeComponent({
   const [isTrashView, setIsTrashView] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
   const [searchTerm, setSearchTerm] = React.useState('')
-
   // WebWorkerを使用した検索処理のカスタムフックを使用
   const { search, isSearching } = useSearchWorker()
+
+  // 前回の検索条件を保持するためのref
+  const prevSearchRef = React.useRef({
+    term: '',
+    isTrash: false
+  })
 
   // デバウンス処理: 入力が止まってから検索を実行（800msに増加）
   React.useEffect(() => {
@@ -71,13 +76,24 @@ export function KnowledgeComponent({
 
     return () => clearTimeout(timer) // クリーンアップ関数
   }, [inputValue])
-
   // Update currentItems when knowledges prop changes or search term changes
   React.useEffect(() => {
     const updateItems = async () => {
+      // 検索条件を保存（デバッグ用）
+      const oldTerm = prevSearchRef.current.term
+      const oldTrash = prevSearchRef.current.isTrash
+
+      // 検索条件を更新（常に最新の検索条件を保持）
+      prevSearchRef.current = {
+        term: searchTerm,
+        isTrash: isTrashView
+      }
+
       if (searchTerm.trim()) {
         try {
-          // WebWorkerを使用して検索を実行
+          console.log(`Searching for: "${searchTerm}" (previous: "${oldTerm}")`)
+
+          // WebWorkerを使用して検索を実行（常に実行）
           const searchResults = await search(
             knowledges,
             searchTerm,
@@ -366,7 +382,7 @@ export function KnowledgeComponent({
                   )}
                 </div>
               </form>
-              {isSearching && (
+              {isSearching && searchTerm && (
                 <div className="mt-2 text-xs text-muted-foreground">
                   検索中...
                 </div>

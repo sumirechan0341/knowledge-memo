@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Knowledge } from './db'
 
 // WebWorkerの型定義
@@ -32,6 +32,10 @@ export function useSearchWorker() {
   const [error, setError] = useState<Error | null>(null)
   const workerRef = useRef<SearchWorker | null>(null)
   const searchTermRef = useRef<string>('')
+  // 検索状態を追跡するためのref
+  const isSearchingRef = useRef(false)
+  // 最新の検索結果を保持するref
+  const resultsRef = useRef<Knowledge[]>([])
 
   // WebWorkerの初期化
   useEffect(() => {
@@ -53,8 +57,12 @@ export function useSearchWorker() {
           // 最新の検索結果のみを反映（古い検索結果は無視）
           if (searchTerm === searchTermRef.current) {
             setResults(searchResults)
-            setIsSearching(false)
+            // 検索結果をrefにも保存
+            resultsRef.current = searchResults
           }
+          // 検索が完了したらisSearchingをfalseに設定（検索語に関わらず）
+          setIsSearching(false)
+          isSearchingRef.current = false
         }
       }
 
@@ -63,6 +71,7 @@ export function useSearchWorker() {
         console.error('Search worker error:', error)
         setError(new Error('検索処理でエラーが発生しました'))
         setIsSearching(false)
+        isSearchingRef.current = false
       }
 
       workerRef.current = worker
@@ -89,46 +98,52 @@ export function useSearchWorker() {
    * @param includeTrash ゴミ箱のアイテムを含めるかどうか
    * @returns 検索結果のPromise
    */
-  const search = async (
-    items: Knowledge[],
-    searchTerm: string,
-    includeTrash: boolean = false
-  ): Promise<Knowledge[]> => {
-    // WebWorkerが利用できない場合はエラー
-    if (!workerRef.current) {
-      const fallbackError = error || new Error('検索機能が利用できません')
-      throw fallbackError
-    }
-
-    // 検索中の状態を設定
-    setIsSearching(true)
-    searchTermRef.current = searchTerm
-
-    // 検索リクエストをWebWorkerに送信
-    workerRef.current.postMessage({
-      type: 'search',
-      data: {
-        items,
-        searchTerm,
-        includeTrash
+  const search = useCallback(
+    async (
+      items: Knowledge[],
+      searchTerm: string,
+      includeTrash: boolean = false
+    ): Promise<Knowledge[]> => {
+      // WebWorkerが利用できない場合はエラー
+      if (!workerRef.current) {
+        const fallbackError = error || new Error('検索機能が利用できません')
+        throw fallbackError
       }
-    })
 
-    // 検索結果を待機するPromiseを返す
-    return new Promise((resolve) => {
-      // 検索結果が更新されたら解決する
-      const checkResults = () => {
-        if (!isSearching) {
-          resolve(results)
-        } else {
-          // まだ検索中の場合は再度チェック
-          setTimeout(checkResults, 50)
+      // 検索中の状態を設定
+      setIsSearching(true)
+      isSearchingRef.current = true
+      searchTermRef.current = searchTerm
+
+      // 検索リクエストをWebWorkerに送信
+      workerRef.current.postMessage({
+        type: 'search',
+        data: {
+          items,
+          searchTerm,
+          includeTrash
         }
-      }
+      })
 
-      checkResults()
-    })
-  }
+      // 検索結果を待機するPromiseを返す
+      return new Promise((resolve) => {
+        // 検索結果を監視する関数
+        const checkResults = () => {
+          if (!isSearchingRef.current) {
+            // 検索が完了したら、現在の結果を返す
+            // resultsRefから最新の結果を取得
+            resolve([...resultsRef.current])
+          } else {
+            // まだ検索中の場合は再度チェック
+            setTimeout(checkResults, 50)
+          }
+        }
+
+        checkResults()
+      })
+    },
+    [error] // resultsを依存配列から削除
+  )
 
   return {
     search,
