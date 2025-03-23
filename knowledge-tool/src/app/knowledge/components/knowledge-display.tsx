@@ -66,7 +66,13 @@ export function KnowledgeDisplay({
       setLabelsInput(knowledge.labels.join(', '))
       setHasChanges(false)
     }
-  }, [knowledge, mail.isCreating, mail.tempKnowledge, renderVersion])
+  }, [
+    knowledge,
+    mail.isCreating,
+    mail.tempKnowledge,
+    renderVersion,
+    mail.selected
+  ])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -99,13 +105,14 @@ export function KnowledgeDisplay({
 
       if (mail.isCreating) {
         // 新しいナレッジを追加
-        await addKnowledge(dataToSave)
+        const newKnowledgeId = await addKnowledge(dataToSave)
 
-        // 編集モードを終了
+        // 編集モードを終了し、新しく作成したナレッジを選択状態にする
         setMail({
           ...mail,
           isCreating: false,
-          tempKnowledge: null
+          tempKnowledge: null,
+          selected: newKnowledgeId
         })
 
         toast.success('新しいナレッジを作成しました')
@@ -291,7 +298,10 @@ export function KnowledgeDisplay({
       <Separator className="flex-shrink-0" />
 
       {knowledge || mail.isCreating ? (
-        <div className="flex flex-1 flex-col" key={renderVersion}>
+        <div
+          className="flex flex-1 flex-col"
+          key={`${renderVersion}-${mail.selected}`}
+        >
           <div className="flex items-start p-4 flex-shrink-0">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>

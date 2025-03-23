@@ -141,7 +141,21 @@ export function KnowledgeComponent({
     if (isTrashView) {
       await handleViewTrash()
     } else {
-      handleViewAll()
+      // 現在の選択状態を保持
+      const currentSelection = selectedKnowledge.selected
+
+      // リストを更新
+      setCurrentItems(knowledges)
+
+      // 選択状態を維持（新規作成後も選択状態を保持するため）
+      if (
+        currentSelection !== selectedKnowledge.selected &&
+        selectedKnowledge.selected !== null
+      ) {
+        setSelectedKnowledge({
+          ...selectedKnowledge
+        })
+      }
     }
   }
 
