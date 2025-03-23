@@ -81,7 +81,6 @@ export function KnowledgeComponent({
     const updateItems = async () => {
       // 検索条件を保存（デバッグ用）
       const oldTerm = prevSearchRef.current.term
-      const oldTrash = prevSearchRef.current.isTrash
 
       // 検索条件を更新（常に最新の検索条件を保持）
       prevSearchRef.current = {
@@ -184,14 +183,14 @@ export function KnowledgeComponent({
             sizes
           )}`
         }}
-        className="h-full max-h-[800px] items-stretch"
+        className="h-[100vh] items-stretch overflow-hidden"
       >
         <ResizablePanel
           defaultSize={defaultLayout[0]}
           collapsedSize={navCollapsedSize}
           collapsible={true}
           minSize={15}
-          maxSize={20}
+          maxSize={30}
           onCollapse={() => {
             setIsCollapsed(true)
             document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
@@ -205,8 +204,10 @@ export function KnowledgeComponent({
             )}`
           }}
           className={cn(
+            'flex flex-col',
             isCollapsed &&
-              'min-w-[50px] transition-all duration-300 ease-in-out'
+              'min-w-[50px] transition-all duration-300 ease-in-out',
+            'overflow-hidden h-[100vh]'
           )}
         >
           <div
@@ -294,13 +295,131 @@ export function KnowledgeComponent({
                 label: '21',
                 icon: Archive,
                 variant: 'ghost'
+              },
+              {
+                title: 'React',
+                label: '3',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'JavaScript',
+                label: '2',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'TypeScript',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'Next.js',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
+              },
+              {
+                title: 'React',
+                label: '3',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'JavaScript',
+                label: '2',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'TypeScript',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'Next.js',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
+              },
+              {
+                title: 'Next.js',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
+              },
+              {
+                title: 'Next.js',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
+              },
+              {
+                title: 'Next.js',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
+              },
+              {
+                title: 'Next.js',
+                label: '1',
+                icon: Tag,
+                variant: 'ghost'
+              },
+              {
+                title: 'その他',
+                label: '21',
+                icon: Archive,
+                variant: 'ghost'
               }
             ]}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
-          <Tabs defaultValue="all">
+        <ResizablePanel
+          defaultSize={defaultLayout[1]}
+          minSize={30}
+          className="flex flex-col overflow-hidden h-[100vh]"
+        >
+          <Tabs defaultValue="all" className="h-full flex flex-col">
             <div className="flex items-center px-4 py-2">
               <h1 className="text-xl font-bold">
                 {isTrashView ? 'ゴミ箱' : 'ナレッジベース'}
@@ -325,8 +444,7 @@ export function KnowledgeComponent({
                         selected: null,
                         isCreating: true,
                         tempKnowledge: {
-                          name: '',
-                          subject: '',
+                          title: '',
                           text: '',
                           date: new Date().toISOString(),
                           labels: [],
@@ -356,7 +474,7 @@ export function KnowledgeComponent({
               </div>
             </div>
             <Separator />
-            <div className="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -395,13 +513,20 @@ export function KnowledgeComponent({
                 </div>
               )}
             </div>
-            <TabsContent value="all" className="m-0">
+            <TabsContent
+              value="all"
+              className="m-0 flex flex-col overflow-auto"
+            >
               <KnowledgeList items={currentItems} searchTerm={searchTerm} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
+        <ResizablePanel
+          defaultSize={defaultLayout[2]}
+          minSize={30}
+          className="flex flex-col overflow-hidden h-[100vh]"
+        >
           <KnowledgeDisplay
             knowledge={
               mail.isCreating

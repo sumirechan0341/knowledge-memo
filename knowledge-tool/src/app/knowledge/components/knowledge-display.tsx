@@ -38,8 +38,7 @@ export function KnowledgeDisplay({
   const [mail, setMail] = useKnowledge()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<Omit<Knowledge, 'id'>>({
-    name: '',
-    subject: '',
+    title: '',
     text: '',
     date: new Date().toISOString(),
     labels: [],
@@ -56,8 +55,7 @@ export function KnowledgeDisplay({
       setHasChanges(false)
     } else if (knowledge) {
       setFormData({
-        name: knowledge.name,
-        subject: knowledge.subject,
+        title: knowledge.title,
         text: knowledge.text,
         date: knowledge.date,
         labels: knowledge.labels,
@@ -140,8 +138,7 @@ export function KnowledgeDisplay({
     } else if (knowledge) {
       // 元のデータに戻す
       setFormData({
-        name: knowledge.name,
-        subject: knowledge.subject,
+        title: knowledge.title,
         text: knowledge.text,
         date: knowledge.date,
         labels: knowledge.labels,
@@ -181,8 +178,8 @@ export function KnowledgeDisplay({
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center p-2">
+    <div className="flex h-full flex-col overflow-auto">
+      <div className="flex items-center p-2 flex-shrink-0">
         <div className="flex items-center gap-2">
           {knowledge?.path === '/trashbox' ? (
             <Tooltip>
@@ -238,17 +235,17 @@ export function KnowledgeDisplay({
           )}
         </div>
       </div>
-      <Separator />
+      <Separator className="flex-shrink-0" />
 
       {knowledge || mail.isCreating ? (
         <div className="flex flex-1 flex-col">
-          <div className="flex items-start p-4">
+          <div className="flex items-start p-4 flex-shrink-0">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>
-                <AvatarImage alt={formData.name || 'New Knowledge'} />
+                <AvatarImage alt={formData.title || 'New Knowledge'} />
                 <AvatarFallback>
-                  {formData.name
-                    ? formData.name
+                  {formData.title
+                    ? formData.title
                         .split(' ')
                         .map((chunk) => chunk[0])
                         .join('')
@@ -259,15 +256,8 @@ export function KnowledgeDisplay({
                 <Input
                   className="font-semibold text-base border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                   placeholder="名前を入力"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-                <Input
-                  className="line-clamp-1 text-xs border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
-                  placeholder="件名を入力"
-                  name="subject"
-                  value={formData.subject}
+                  name="title"
+                  value={formData.title}
                   onChange={handleChange}
                 />
                 <div className="line-clamp-1 text-xs">
@@ -287,8 +277,8 @@ export function KnowledgeDisplay({
                 : knowledge?.date && format(new Date(knowledge.date), 'PPpp')}
             </div>
           </div>
-          <Separator />
-          <div className="flex-1 p-4">
+          <Separator className="flex-shrink-0" />
+          <div className="flex-1 p-4 overflow-auto">
             {mail.isCreating || hasChanges ? (
               <Textarea
                 className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -298,15 +288,15 @@ export function KnowledgeDisplay({
                 onChange={handleChange}
               />
             ) : (
-              <div className="w-full h-full min-h-[200px] overflow-auto whitespace-pre-wrap">
+              <div className="w-full h-full min-h-[200px] whitespace-pre-wrap">
                 {searchTerm
                   ? highlightText(formData.text, searchTerm)
                   : formData.text}
               </div>
             )}
           </div>
-          <Separator className="mt-auto" />
-          <div className="p-4">
+          <Separator className="mt-auto flex-shrink-0" />
+          <div className="p-4 flex-shrink-0">
             <form>
               <div className="grid gap-4">
                 <Textarea className="p-4" placeholder={`コメントを追加...`} />

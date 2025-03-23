@@ -4,8 +4,7 @@ import { openDB, DBSchema } from 'idb'
 // ナレッジのデータ型定義
 export interface Knowledge {
   id?: number
-  name: string
-  subject: string
+  title: string
   text: string
   date: string
   labels: string[]
@@ -82,8 +81,7 @@ export async function searchKnowledgeItems(
     }
 
     return (
-      item.name.toLowerCase().includes(searchTermLower) ||
-      item.subject.toLowerCase().includes(searchTermLower) ||
+      item.title.toLowerCase().includes(searchTermLower) ||
       item.text.toLowerCase().includes(searchTermLower)
     )
   })

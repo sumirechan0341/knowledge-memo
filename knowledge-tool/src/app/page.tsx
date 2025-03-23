@@ -44,7 +44,7 @@ export default function KnowledgePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <div className="mb-4 text-4xl">⏳</div>
           <p className="text-muted-foreground">
@@ -57,7 +57,7 @@ export default function KnowledgePage() {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <div className="mb-4 text-4xl">⚠️</div>
           <p className="text-destructive">{error}</p>
@@ -70,7 +70,7 @@ export default function KnowledgePage() {
   }
 
   return (
-    <div className="hidden flex-col md:flex h-screen">
+    <div className="hidden flex-col md:flex h-full">
       <KnowledgeComponent
         accounts={accounts}
         knowledges={knowledgeItems}

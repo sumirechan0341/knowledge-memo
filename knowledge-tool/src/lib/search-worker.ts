@@ -73,8 +73,7 @@ function performSearch(
     }
 
     return (
-      item.name.toLowerCase().includes(searchTermLower) ||
-      item.subject.toLowerCase().includes(searchTermLower) ||
+      item.title.toLowerCase().includes(searchTermLower) ||
       item.text.toLowerCase().includes(searchTermLower)
     )
   })
