@@ -23,6 +23,8 @@ import {
 import { useKnowledge } from '../use-knowledge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+
 // import { highlightText } from '@/lib/highlight-text'
 
 interface KnowledgeDisplayProps {
@@ -242,7 +244,7 @@ export function KnowledgeDisplay({
   }
 
   return (
-    <div className="flex flex-col overflow-y-auto">
+    <div className="flex flex-col">
       <div className="flex items-center p-2 flex-shrink-0 h-[52px]">
         <div className="flex items-center gap-2">
           {knowledge?.path === '/trashbox' ? (
@@ -321,7 +323,7 @@ export function KnowledgeDisplay({
               </Avatar>
               <div className="grid gap-1 flex-1">
                 <Input
-                  className="font-semibold border-none h-auto !text-4xl focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="font-semibold border-none !text-4xl focus-visible:ring-0 focus-visible:ring-offset-0"
                   placeholder="タイトルを入力"
                   width={'100%'}
                   name="title"
@@ -334,6 +336,7 @@ export function KnowledgeDisplay({
                     className="inline-block w-auto border-none p-0 !text-base h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                     placeholder="タグをカンマ区切りで入力"
                     value={labelsInput}
+                    width={'100%'}
                     onChange={handleLabelsChange}
                   />
                 </div>
@@ -344,12 +347,12 @@ export function KnowledgeDisplay({
                 '新規作成中'
               ) : (
                 <div className="flex flex-col items-end">
-                  <div>
+                  <div className="w-[180px]">
                     作成日時:{' '}
                     {knowledge?.date &&
                       format(new Date(knowledge.date), 'yyyy/MM/dd HH:mm:ss')}
                   </div>
-                  <div>
+                  <div className="w-[180px]">
                     更新日時:{' '}
                     {knowledge?.updatedAt
                       ? format(
@@ -364,15 +367,19 @@ export function KnowledgeDisplay({
             </div>
           </div>
           <Separator className="flex-shrink-0" />
-          <div className="flex-1 p-4 overflow-auto">
-            <Textarea
-              className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              placeholder="内容を入力"
-              name="text"
-              value={searchTerm && !hasChanges ? formData.text : formData.text}
-              onChange={handleChange}
-              readOnly={knowledge?.path === '/trashbox'}
-            />
+          <div className="flex-1 p-4">
+            <ScrollArea className="overflow-auto">
+              <Textarea
+                className="w-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                placeholder="内容を入力"
+                name="text"
+                value={
+                  searchTerm && !hasChanges ? formData.text : formData.text
+                }
+                onChange={handleChange}
+                readOnly={knowledge?.path === '/trashbox'}
+              />
+            </ScrollArea>
           </div>
           <Separator className="mt-auto flex-shrink-0" />
           <div className="p-4 flex-shrink-0">

@@ -1,4 +1,3 @@
-import { ComponentProps } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -82,7 +81,7 @@ export function KnowledgeList({ items, searchTerm = '' }: KnowledgeListProps) {
             {item.labels.length ? (
               <div className="flex items-center gap-2">
                 {item.labels.map((label) => (
-                  <Badge key={label} variant={getBadgeVariantFromLabel(label)}>
+                  <Badge key={label} variant={'default'}>
                     {label}
                   </Badge>
                 ))}
@@ -93,16 +92,4 @@ export function KnowledgeList({ items, searchTerm = '' }: KnowledgeListProps) {
       </div>
     </ScrollArea>
   )
-}
-
-function getBadgeVariantFromLabel(
-  label: string
-): ComponentProps<typeof Badge>['variant'] {
-  if (['React', 'TypeScript', 'JavaScript', 'Next.js'].includes(label)) {
-    return 'default'
-  }
-  if (['CSS', 'Tailwind', 'デザイン'].includes(label)) {
-    return 'outline'
-  }
-  return 'secondary'
 }

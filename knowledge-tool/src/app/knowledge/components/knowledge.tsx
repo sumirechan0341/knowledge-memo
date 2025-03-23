@@ -289,7 +289,7 @@ export function KnowledgeComponent({
           <Tabs defaultValue="all" className="h-full flex flex-col">
             <div className="flex items-center px-4 py-2 h-[52px]">
               <h1 className="text-xl font-bold">
-                {isTrashView ? 'ゴミ箱' : 'TSUREDURE'}
+                {isTrashView ? 'ゴミ箱' : 'TSUREDURE - 徒然なるままに'}
               </h1>
               <div className="flex items-center ml-auto gap-x-2">
                 {isTrashView ? (
