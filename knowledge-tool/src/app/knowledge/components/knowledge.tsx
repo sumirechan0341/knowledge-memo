@@ -30,12 +30,8 @@ import { KnowledgeDisplay } from './knowledge-display'
 import { KnowledgeList } from './knowledge-list'
 import { Nav } from './nav'
 import { useKnowledge } from '../use-knowledge'
-import {
-  Knowledge,
-  getKnowledgeItemsByPath,
-  emptyTrash,
-  searchKnowledgeItems
-} from '@/lib/db'
+import { Knowledge, getKnowledgeItemsByPath, emptyTrash } from '@/lib/db'
+import { useSearchWorker } from '@/lib/use-search-worker'
 interface KnowledgeProps {
   accounts: {
     label: string
@@ -63,13 +59,15 @@ export function KnowledgeComponent({
   const [isTrashView, setIsTrashView] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
   const [searchTerm, setSearchTerm] = React.useState('')
-  const [isSearching, setIsSearching] = React.useState(false)
 
-  // デバウンス処理: 入力が止まってから検索を実行
+  // WebWorkerを使用した検索処理のカスタムフックを使用
+  const { search, isSearching } = useSearchWorker()
+
+  // デバウンス処理: 入力が止まってから検索を実行（800msに増加）
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setSearchTerm(inputValue)
-    }, 500) // 500ミリ秒のデバウンス時間
+    }, 800) // 800ミリ秒のデバウンス時間に増加
 
     return () => clearTimeout(timer) // クリーンアップ関数
   }, [inputValue])
@@ -78,17 +76,16 @@ export function KnowledgeComponent({
   React.useEffect(() => {
     const updateItems = async () => {
       if (searchTerm.trim()) {
-        setIsSearching(true)
         try {
-          const searchResults = await searchKnowledgeItems(
+          // WebWorkerを使用して検索を実行
+          const searchResults = await search(
+            knowledges,
             searchTerm,
             isTrashView
           )
           setCurrentItems(searchResults)
         } catch (error) {
           console.error('Search failed:', error)
-        } finally {
-          setIsSearching(false)
         }
       } else if (isTrashView) {
         try {
@@ -103,7 +100,7 @@ export function KnowledgeComponent({
     }
 
     updateItems()
-  }, [knowledges, isTrashView, searchTerm])
+  }, [knowledges, isTrashView, searchTerm, search])
 
   // Function to handle viewing trash items
   const handleViewTrash = async () => {
