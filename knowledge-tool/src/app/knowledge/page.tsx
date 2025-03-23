@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { KnowledgeComponent } from '@/app/knowledge/components/knowledge'
-import { accounts, knowledges as mockKnowledges } from '@/app/knowledge/data'
+import { accounts } from '@/app/knowledge/data'
 import {
   Knowledge,
   getKnowledgeItems,
@@ -54,7 +54,7 @@ export default function KnowledgePage() {
     const loadData = async () => {
       try {
         // モックデータでIndexedDBを初期化（データが存在しない場合のみ）
-        await initializeDBWithMockData(mockKnowledges)
+        await initializeDBWithMockData([])
 
         // IndexedDBからデータを取得
         await refreshKnowledge()

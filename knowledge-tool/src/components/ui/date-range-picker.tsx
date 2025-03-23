@@ -59,9 +59,12 @@ export function DateRangePicker({
                     size="icon"
                     className="ml-auto h-5 w-5"
                     onClick={clearDateRange}
+                    asChild
                   >
-                    <X className="h-3 w-3" />
-                    <span className="sr-only">クリア</span>
+                    <div>
+                      <X className="h-3 w-3" />
+                      <span className="sr-only">クリア</span>
+                    </div>
                   </Button>
                 </>
               ) : (
@@ -72,9 +75,12 @@ export function DateRangePicker({
                     size="icon"
                     className="ml-auto h-5 w-5"
                     onClick={clearDateRange}
+                    asChild
                   >
-                    <X className="h-3 w-3" />
-                    <span className="sr-only">クリア</span>
+                    <div>
+                      <X className="h-3 w-3" />
+                      <span className="sr-only">クリア</span>
+                    </div>
                   </Button>
                 </>
               )

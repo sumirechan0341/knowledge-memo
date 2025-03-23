@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" className="light" style={{ colorScheme: 'light' }}>
       <body
         className={cn(
           'h-full bg-background font-sans antialiased overflow-hidden',

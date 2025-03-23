@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useCookies } from 'next-client-cookies'
 import { Knowledge, getKnowledgeItems, addKnowledge } from '@/lib/db'
 import { accounts } from '../knowledge/data'
 import { Button } from '@/components/ui/button'
@@ -15,14 +14,30 @@ export default function JournalPage() {
   const [error, setError] = useState<string | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [selectedKnowledge, setSelectedKnowledge] = useKnowledge()
+  const [defaultLayout, setDefaultLayout] = useState<number[]>([20, 32, 48])
+  const [defaultCollapsed, setDefaultCollapsed] = useState<boolean>(false)
 
   // クッキーからレイアウト設定を取得
-  const cookies = useCookies()
-  const layoutCookie = cookies.get('react-resizable-panels:layout:knowledge')
-  const collapsedCookie = cookies.get('react-resizable-panels:collapsed')
+  useEffect(() => {
+    // クッキーからレイアウト設定を読み込む
+    const layoutCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('react-resizable-panels:layout:knowledge='))
 
-  const defaultLayout = layoutCookie ? JSON.parse(layoutCookie) : [20, 32, 48]
-  const defaultCollapsed = collapsedCookie ? JSON.parse(collapsedCookie) : false
+    if (layoutCookie) {
+      const layoutValue = layoutCookie.split('=')[1]
+      setDefaultLayout(JSON.parse(decodeURIComponent(layoutValue)))
+    }
+
+    const collapsedCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('react-resizable-panels:collapsed='))
+
+    if (collapsedCookie) {
+      const collapsedValue = collapsedCookie.split('=')[1]
+      setDefaultCollapsed(JSON.parse(decodeURIComponent(collapsedValue)))
+    }
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
