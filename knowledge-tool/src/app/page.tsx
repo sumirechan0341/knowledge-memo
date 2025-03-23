@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useCookies } from 'next-client-cookies' // ← 正しいインポートパス
 import { Knowledge, getKnowledgeItems } from '@/lib/db'
 import { accounts } from './knowledge/data'
 import { Button } from '@/components/ui/button'
@@ -13,13 +12,9 @@ export default function KnowledgePage() {
   const [error, setError] = useState<string | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  // クッキーからレイアウト設定を取得
-  const cookies = useCookies()
-  const layoutCookie = cookies.get('react-resizable-panels:layout:knowledge')
-  const collapsedCookie = cookies.get('react-resizable-panels:collapsed')
-
-  const defaultLayout = layoutCookie ? JSON.parse(layoutCookie) : [20, 32, 48]
-  const defaultCollapsed = collapsedCookie ? JSON.parse(collapsedCookie) : false
+  // デフォルトのレイアウト設定
+  const defaultLayout = [20, 32, 48]
+  const defaultCollapsed = false
 
   useEffect(() => {
     const fetchData = async () => {

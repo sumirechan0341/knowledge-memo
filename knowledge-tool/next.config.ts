@@ -133,7 +133,8 @@ const nextConfig = withPWA({
   },
   typescript: {
     ignoreBuildErrors: true
-  }
+  },
+  output: 'export'
 })
 
 export default nextConfig
