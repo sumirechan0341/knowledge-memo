@@ -35,12 +35,13 @@ export function KnowledgeDisplay({
   onKnowledgeSaved,
   searchTerm = ''
 }: KnowledgeDisplayProps) {
-  const [mail, setMail] = useKnowledge()
+  const [selectedKnowledge, setSelectedKnowledge] = useKnowledge()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<Omit<Knowledge, 'id'>>({
     title: '',
     text: '',
     date: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     labels: [],
     read: false
   })
@@ -51,15 +52,16 @@ export function KnowledgeDisplay({
 
   // 既存のナレッジが選択された場合、またはtempKnowledgeが設定された場合、フォームデータを更新
   useEffect(() => {
-    if (mail.isCreating && mail.tempKnowledge) {
-      setFormData(mail.tempKnowledge)
-      setLabelsInput(mail.tempKnowledge.labels.join(', '))
+    if (selectedKnowledge.isCreating && selectedKnowledge.tempKnowledge) {
+      setFormData(selectedKnowledge.tempKnowledge)
+      setLabelsInput(selectedKnowledge.tempKnowledge.labels.join(', '))
       setHasChanges(false)
     } else if (knowledge) {
       setFormData({
         title: knowledge.title,
         text: knowledge.text,
         date: knowledge.date,
+        updatedAt: knowledge.updatedAt || knowledge.date,
         labels: knowledge.labels,
         read: knowledge.read || false
       })
@@ -68,10 +70,10 @@ export function KnowledgeDisplay({
     }
   }, [
     knowledge,
-    mail.isCreating,
-    mail.tempKnowledge,
+    selectedKnowledge.isCreating,
+    selectedKnowledge.tempKnowledge,
     renderVersion,
-    mail.selected
+    selectedKnowledge.selected
   ])
 
   const handleChange = (
@@ -103,13 +105,13 @@ export function KnowledgeDisplay({
         labels
       }
 
-      if (mail.isCreating) {
+      if (selectedKnowledge.isCreating) {
         // 新しいナレッジを追加
         const newKnowledgeId = await addKnowledge(dataToSave)
 
         // 編集モードを終了し、新しく作成したナレッジを選択状態にする
-        setMail({
-          ...mail,
+        setSelectedKnowledge({
+          ...selectedKnowledge,
           isCreating: false,
           tempKnowledge: null,
           selected: newKnowledgeId
@@ -132,6 +134,7 @@ export function KnowledgeDisplay({
           title: updatedKnowledge.title,
           text: updatedKnowledge.text,
           date: updatedKnowledge.date,
+          updatedAt: updatedKnowledge.updatedAt,
           labels: updatedKnowledge.labels,
           read: updatedKnowledge.read || false
         })
@@ -159,9 +162,9 @@ export function KnowledgeDisplay({
     hasChanges,
     labelsInput,
     formData,
-    mail,
+    selectedKnowledge,
     knowledge,
-    setMail,
+    setSelectedKnowledge,
     onKnowledgeSaved,
     setRenderVersion
   ])
@@ -185,9 +188,9 @@ export function KnowledgeDisplay({
   }, [handleSave, hasChanges])
 
   const handleCancel = () => {
-    if (mail.isCreating) {
-      setMail({
-        ...mail,
+    if (selectedKnowledge.isCreating) {
+      setSelectedKnowledge({
+        ...selectedKnowledge,
         isCreating: false,
         tempKnowledge: null
       })
@@ -197,6 +200,7 @@ export function KnowledgeDisplay({
         title: knowledge.title,
         text: knowledge.text,
         date: knowledge.date,
+        updatedAt: knowledge.updatedAt || knowledge.date,
         labels: knowledge.labels,
         read: knowledge.read || false
       })
@@ -247,7 +251,7 @@ export function KnowledgeDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  disabled={!knowledge || mail.isCreating}
+                  disabled={!knowledge || selectedKnowledge.isCreating}
                   onClick={handleRestoreFromTrash}
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -262,7 +266,7 @@ export function KnowledgeDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  disabled={!knowledge || mail.isCreating}
+                  disabled={!knowledge || selectedKnowledge.isCreating}
                   onClick={handleMoveToTrash}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -274,7 +278,7 @@ export function KnowledgeDisplay({
           )}
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {(hasChanges || mail.isCreating) && (
+          {(hasChanges || selectedKnowledge.isCreating) && (
             <>
               <Button variant="ghost" size="sm" onClick={handleCancel}>
                 <X className="mr-2 h-4 w-4" />
@@ -297,13 +301,13 @@ export function KnowledgeDisplay({
       </div>
       <Separator className="flex-shrink-0" />
 
-      {knowledge || mail.isCreating ? (
+      {knowledge || selectedKnowledge.isCreating ? (
         <div
           className="flex flex-1 flex-col"
-          key={`${renderVersion}-${mail.selected}`}
+          key={`${renderVersion}-${selectedKnowledge.selected}`}
         >
-          <div className="flex items-start p-4 flex-shrink-0">
-            <div className="flex items-start gap-4 text-sm">
+          <div className="flex items-start p-4 flex-shrink-0 items-center gap-x-5">
+            <div className="flex items-start gap-4 text-sm flex-1">
               <Avatar>
                 <AvatarImage alt={formData.title || 'New Knowledge'} />
                 <AvatarFallback>
@@ -315,10 +319,11 @@ export function KnowledgeDisplay({
                     : 'NK'}
                 </AvatarFallback>
               </Avatar>
-              <div className="grid gap-1">
+              <div className="grid gap-1 flex-1">
                 <Input
-                  className="font-semibold text-base border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
-                  placeholder="名前を入力"
+                  className="font-semibold border-none h-auto !text-4xl focus-visible:ring-0 focus-visible:ring-offset-0"
+                  placeholder="タイトルを入力"
+                  width={'100%'}
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
@@ -326,7 +331,7 @@ export function KnowledgeDisplay({
                 <div className="line-clamp-1 text-xs">
                   <span className="font-medium">タグ:</span>{' '}
                   <Input
-                    className="inline-block w-auto border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="inline-block w-auto border-none p-0 !text-base h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                     placeholder="タグをカンマ区切りで入力"
                     value={labelsInput}
                     onChange={handleLabelsChange}
@@ -334,10 +339,28 @@ export function KnowledgeDisplay({
                 </div>
               </div>
             </div>
-            <div className="ml-auto text-xs text-muted-foreground">
-              {mail.isCreating
-                ? '新規作成中'
-                : knowledge?.date && format(new Date(knowledge.date), 'PPpp')}
+            <div className="ml-auto text-xs text-muted-foreground align-item-middle">
+              {selectedKnowledge.isCreating ? (
+                '新規作成中'
+              ) : (
+                <div className="flex flex-col items-end">
+                  <div>
+                    作成日時:{' '}
+                    {knowledge?.date &&
+                      format(new Date(knowledge.date), 'yyyy/MM/dd HH:mm:ss')}
+                  </div>
+                  <div>
+                    更新日時:{' '}
+                    {knowledge?.updatedAt
+                      ? format(
+                          new Date(knowledge.updatedAt),
+                          'yyyy/MM/dd HH:mm:ss'
+                        )
+                      : knowledge?.date &&
+                        format(new Date(knowledge.date), 'yyyy/MM/dd HH:mm:ss')}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <Separator className="flex-shrink-0" />

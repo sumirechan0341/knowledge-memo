@@ -7,6 +7,7 @@ export interface Knowledge {
   title: string
   text: string
   date: string
+  updatedAt?: string // 更新日時
   labels: string[]
   read?: boolean
   path?: string // パスベースの整理 (例: '/trashbox' はゴミ箱に入ったナレッジ)
@@ -51,10 +52,10 @@ export async function getKnowledgeItems(
     ? items
     : items.filter((item) => item.path !== '/trashbox')
 
-  // 日付の新しい順（降順）にソート
+  // 更新日時の新しい順（降順）にソート
   return filtered.sort((a, b) => {
-    const dateA = new Date(a.date).getTime()
-    const dateB = new Date(b.date).getTime()
+    const dateA = new Date(a.updatedAt || a.date).getTime()
+    const dateB = new Date(b.updatedAt || b.date).getTime()
     return dateB - dateA
   })
 }
@@ -86,10 +87,10 @@ export async function searchKnowledgeItems(
     )
   })
 
-  // 日付の新しい順（降順）にソート
+  // 更新日時の新しい順（降順）にソート
   return filtered.sort((a, b) => {
-    const dateA = new Date(a.date).getTime()
-    const dateB = new Date(b.date).getTime()
+    const dateA = new Date(a.updatedAt || a.date).getTime()
+    const dateB = new Date(b.updatedAt || b.date).getTime()
     return dateB - dateA
   })
 }
@@ -99,12 +100,16 @@ export async function addKnowledge(
   item: Omit<Knowledge, 'id'>
 ): Promise<number> {
   const db = await getDB()
+  // 作成時は更新日時も同じ
+  item.updatedAt = item.date
   return db.add(STORE_NAME, item)
 }
 
 // 既存のナレッジデータを更新する関数
 export async function updateKnowledge(item: Knowledge): Promise<void> {
   const db = await getDB()
+  // 更新日時を設定
+  item.updatedAt = new Date().toISOString()
   await db.put(STORE_NAME, item)
 }
 
@@ -165,10 +170,10 @@ export async function getKnowledgeItemsByPath(
     ? items.filter((item) => item.path === path)
     : items.filter((item) => !item.path || item.path === '') // パスなしのアイテム
 
-  // 日付の新しい順（降順）にソート
+  // 更新日時の新しい順（降順）にソート
   return filtered.sort((a, b) => {
-    const dateA = new Date(a.date).getTime()
-    const dateB = new Date(b.date).getTime()
+    const dateA = new Date(a.updatedAt || a.date).getTime()
+    const dateB = new Date(b.updatedAt || b.date).getTime()
     return dateB - dateA
   })
 }

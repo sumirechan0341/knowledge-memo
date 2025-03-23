@@ -52,9 +52,25 @@ export function KnowledgeList({ items, searchTerm = '' }: KnowledgeListProps) {
                       : 'text-muted-foreground'
                   )}
                 >
-                  {formatDistanceToNow(new Date(item.date), {
-                    addSuffix: true
-                  })}
+                  {(() => {
+                    const updateDate = new Date(item.updatedAt || item.date)
+                    const oneWeekAgo = new Date()
+                    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+                    if (updateDate < oneWeekAgo) {
+                      // 1週間以上前の場合は日付を表示
+                      return updateDate.toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      })
+                    } else {
+                      // 1週間以内の場合は相対時間を表示
+                      return formatDistanceToNow(updateDate, {
+                        addSuffix: true
+                      })
+                    }
+                  })()}
                 </div>
               </div>
             </div>
