@@ -22,15 +22,18 @@ import {
 import { useKnowledge } from '../use-knowledge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { highlightText } from '@/lib/highlight-text'
 
 interface KnowledgeDisplayProps {
   knowledge: Knowledge | null
   onKnowledgeSaved?: () => void
+  searchTerm?: string
 }
 
 export function KnowledgeDisplay({
   knowledge,
-  onKnowledgeSaved
+  onKnowledgeSaved,
+  searchTerm = ''
 }: KnowledgeDisplayProps) {
   const [mail, setMail] = useKnowledge()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -286,13 +289,21 @@ export function KnowledgeDisplay({
           </div>
           <Separator />
           <div className="flex-1 p-4">
-            <Textarea
-              className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              placeholder="内容を入力"
-              name="text"
-              value={formData.text}
-              onChange={handleChange}
-            />
+            {mail.isCreating || hasChanges ? (
+              <Textarea
+                className="w-full h-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                placeholder="内容を入力"
+                name="text"
+                value={formData.text}
+                onChange={handleChange}
+              />
+            ) : (
+              <div className="w-full h-full min-h-[200px] overflow-auto whitespace-pre-wrap">
+                {searchTerm
+                  ? highlightText(formData.text, searchTerm)
+                  : formData.text}
+              </div>
+            )}
           </div>
           <Separator className="mt-auto" />
           <div className="p-4">

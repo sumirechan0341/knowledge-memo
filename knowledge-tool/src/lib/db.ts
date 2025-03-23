@@ -60,6 +60,42 @@ export async function getKnowledgeItems(
   })
 }
 
+// 検索ワードでナレッジデータを検索する関数
+export async function searchKnowledgeItems(
+  searchTerm: string,
+  includeTrash: boolean = false
+): Promise<Knowledge[]> {
+  // 検索ワードが空の場合は全てのアイテムを返す
+  if (!searchTerm.trim()) {
+    return getKnowledgeItems(includeTrash)
+  }
+
+  const db = await getDB()
+  const items = await db.getAll(STORE_NAME)
+
+  // 検索ワードで絞り込み（タイトルと本文で検索）
+  const searchTermLower = searchTerm.toLowerCase()
+  const filtered = items.filter((item) => {
+    // ゴミ箱のアイテムを除外（includeTrashがtrueの場合は含める）
+    if (!includeTrash && item.path === '/trashbox') {
+      return false
+    }
+
+    return (
+      item.name.toLowerCase().includes(searchTermLower) ||
+      item.subject.toLowerCase().includes(searchTermLower) ||
+      item.text.toLowerCase().includes(searchTermLower)
+    )
+  })
+
+  // 日付の新しい順（降順）にソート
+  return filtered.sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    return dateB - dateA
+  })
+}
+
 // 新しいナレッジデータを追加する関数
 export async function addKnowledge(
   item: Omit<Knowledge, 'id'>

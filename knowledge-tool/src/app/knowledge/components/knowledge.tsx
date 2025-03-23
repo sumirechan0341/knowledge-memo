@@ -10,7 +10,8 @@ import {
   Code,
   FileText,
   Tag,
-  Plus
+  Plus,
+  X
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -29,7 +30,12 @@ import { KnowledgeDisplay } from './knowledge-display'
 import { KnowledgeList } from './knowledge-list'
 import { Nav } from './nav'
 import { useKnowledge } from '../use-knowledge'
-import { Knowledge, getKnowledgeItemsByPath, emptyTrash } from '@/lib/db'
+import {
+  Knowledge,
+  getKnowledgeItemsByPath,
+  emptyTrash,
+  searchKnowledgeItems
+} from '@/lib/db'
 interface KnowledgeProps {
   accounts: {
     label: string
@@ -55,13 +61,49 @@ export function KnowledgeComponent({
   const [mail, setMail] = useKnowledge()
   const [currentItems, setCurrentItems] = React.useState(knowledges)
   const [isTrashView, setIsTrashView] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState('')
+  const [searchTerm, setSearchTerm] = React.useState('')
+  const [isSearching, setIsSearching] = React.useState(false)
 
-  // Update currentItems when knowledges prop changes
+  // デバウンス処理: 入力が止まってから検索を実行
   React.useEffect(() => {
-    if (!isTrashView) {
-      setCurrentItems(knowledges)
+    const timer = setTimeout(() => {
+      setSearchTerm(inputValue)
+    }, 500) // 500ミリ秒のデバウンス時間
+
+    return () => clearTimeout(timer) // クリーンアップ関数
+  }, [inputValue])
+
+  // Update currentItems when knowledges prop changes or search term changes
+  React.useEffect(() => {
+    const updateItems = async () => {
+      if (searchTerm.trim()) {
+        setIsSearching(true)
+        try {
+          const searchResults = await searchKnowledgeItems(
+            searchTerm,
+            isTrashView
+          )
+          setCurrentItems(searchResults)
+        } catch (error) {
+          console.error('Search failed:', error)
+        } finally {
+          setIsSearching(false)
+        }
+      } else if (isTrashView) {
+        try {
+          const trashedItems = await getKnowledgeItemsByPath('/trashbox')
+          setCurrentItems(trashedItems)
+        } catch (error) {
+          console.error('Failed to fetch trashed items:', error)
+        }
+      } else {
+        setCurrentItems(knowledges)
+      }
     }
-  }, [knowledges, isTrashView])
+
+    updateItems()
+  }, [knowledges, isTrashView, searchTerm])
 
   // Function to handle viewing trash items
   const handleViewTrash = async () => {
@@ -302,15 +344,46 @@ export function KnowledgeComponent({
             </div>
             <Separator />
             <div className="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <form>
+              <form onSubmit={(e) => e.preventDefault()}>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="検索..." className="pl-8" />
+                  <Input
+                    placeholder="検索..."
+                    className="pl-8"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                  />
+                  {inputValue && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1 h-6 w-6"
+                      onClick={() => {
+                        setInputValue('')
+                        setSearchTerm('')
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">検索をクリア</span>
+                    </Button>
+                  )}
                 </div>
               </form>
+              {isSearching && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  検索中...
+                </div>
+              )}
+              {searchTerm && !isSearching && (
+                <div className="mt-2 text-xs">
+                  {currentItems.length === 0
+                    ? `"${searchTerm}" に一致する結果はありません`
+                    : `"${searchTerm}" の検索結果: ${currentItems.length}件`}
+                </div>
+              )}
             </div>
             <TabsContent value="all" className="m-0">
-              <KnowledgeList items={currentItems} />
+              <KnowledgeList items={currentItems} searchTerm={searchTerm} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
@@ -322,6 +395,7 @@ export function KnowledgeComponent({
                 ? null
                 : currentItems.find((item) => item.id === mail.selected) || null
             }
+            searchTerm={searchTerm}
             onKnowledgeSaved={() => {
               refreshCurrentView()
               if (onKnowledgeAdded) {
