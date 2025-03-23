@@ -23,8 +23,6 @@ import {
 import { useKnowledge } from '../use-knowledge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
-
 // import { highlightText } from '@/lib/highlight-text'
 
 interface KnowledgeDisplayProps {
@@ -244,7 +242,7 @@ export function KnowledgeDisplay({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-y-auto">
       <div className="flex items-center p-2 flex-shrink-0 h-[52px]">
         <div className="flex items-center gap-2">
           {knowledge?.path === '/trashbox' ? (
@@ -368,18 +366,14 @@ export function KnowledgeDisplay({
           </div>
           <Separator className="flex-shrink-0" />
           <div className="flex-1 p-4">
-            <ScrollArea className="overflow-auto">
-              <Textarea
-                className="w-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="内容を入力"
-                name="text"
-                value={
-                  searchTerm && !hasChanges ? formData.text : formData.text
-                }
-                onChange={handleChange}
-                readOnly={knowledge?.path === '/trashbox'}
-              />
-            </ScrollArea>
+            <Textarea
+              className="w-full min-h-[200px] resize-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="内容を入力"
+              name="text"
+              value={searchTerm && !hasChanges ? formData.text : formData.text}
+              onChange={handleChange}
+              readOnly={knowledge?.path === '/trashbox'}
+            />
           </div>
           <Separator className="mt-auto flex-shrink-0" />
           <div className="p-4 flex-shrink-0">
